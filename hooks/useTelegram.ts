@@ -1,46 +1,73 @@
 import { useEffect, useState } from 'react';
 
-// Using 'any' for Telegram object to avoid complex type setup if global types aren't picked up immediately,
-// but usually @types/telegram-web-app handles it.
-// We'll try to use the specific types if possible, but fallback to any for safety.
+interface TelegramUser {
+    id: number;
+    first_name: string;
+    last_name?: string;
+    username?: string;
+    photo_url?: string;
+}
+
+interface TelegramWebApp {
+    ready: () => void;
+    expand: () => void;
+    close: () => void;
+    setHeaderColor: (color: string) => void;
+    setBackgroundColor: (color: string) => void;
+    initDataUnsafe?: {
+        user?: TelegramUser;
+    };
+}
+
+declare global {
+    interface Window {
+        Telegram?: {
+            WebApp?: TelegramWebApp;
+        };
+    }
+}
 
 export function useTelegram() {
-    const [tg, setTg] = useState<any>(null);
-    const [user, setUser] = useState<any>(null);
+    const [isMounted, setIsMounted] = useState(false);
+    const [tg, setTg] = useState<TelegramWebApp | null>(null);
+    const [user, setUser] = useState<TelegramUser | null>(null);
 
     useEffect(() => {
+        setIsMounted(true);
+        
+        // Безопасная проверка только на клиенте
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
             const webApp = window.Telegram.WebApp;
             webApp.ready();
 
-            // Expand to full height
             try {
                 webApp.expand();
             } catch (e) {
-                console.error("Failed to expand WebApp", e);
+                console.warn("Failed to expand WebApp:", e);
             }
 
             setTg(webApp);
-            setUser(webApp.initDataUnsafe?.user);
+            setUser(webApp.initDataUnsafe?.user || null);
 
-            // Set header color
             try {
-                webApp.setHeaderColor('#221e10'); // background-dark
+                webApp.setHeaderColor('#221e10');
                 webApp.setBackgroundColor('#221e10');
             } catch (e) {
-                console.error("Failed to set colors", e);
+                console.warn("Failed to set colors:", e);
             }
         }
     }, []);
 
     const onClose = () => {
         tg?.close();
-    }
+    };
 
     return {
         tg,
         user,
         onClose,
-        isReady: !!tg
-    }
+        isReady: isMounted && !!tg,
+        isMounted
+    };
 }
+

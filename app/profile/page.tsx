@@ -1,95 +1,112 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { User, Settings, CreditCard, Bell, LogOut, ChevronRight } from 'lucide-react';
+import { Gift, Bell, MapPin, ChevronRight, Phone, User } from 'lucide-react';
 import Link from 'next/link';
 import { useTelegram } from '@/hooks/useTelegram';
-import { useEffect, useState } from 'react';
+import BottomNav from '@/components/ui/BottomNav';
+import { shopInfo } from '@/data/shop';
 
 export default function Profile() {
-  const { user } = useTelegram();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { user, isMounted } = useTelegram();
 
   const menuItems = [
-    { icon: User, label: 'Личные данные', href: '#' },
-    { icon: CreditCard, label: 'Способы оплаты', href: '#' },
-    { icon: Bell, label: 'Уведомления', href: '#' },
-    { icon: Settings, label: 'Настройки', href: '#' },
+    { icon: Gift, label: 'Акции', href: '/promotions', color: 'text-accent' },
+    { icon: Bell, label: 'Уведомления', href: '/notifications' },
+    { icon: MapPin, label: 'Адрес', href: '/location' },
   ];
 
-  if (!mounted) return null;
+  if (!isMounted) {
+    return (
+      <div className="flex flex-col min-h-screen bg-bg pb-24">
+        <div className="p-4 pt-12">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full skeleton" />
+            <div className="flex-1 space-y-2">
+              <div className="h-5 w-32 skeleton rounded" />
+              <div className="h-4 w-24 skeleton rounded" />
+            </div>
+          </div>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background-dark pb-24">
+    <div className="flex flex-col min-h-screen bg-bg">
       {/* Header */}
-      <header className="px-6 pt-8 pb-6 bg-surface-dark border-b border-white/5">
-        <h1 className="text-2xl font-bold text-white mb-6">Профиль</h1>
-
+      <div className="p-4 pt-12 pb-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-surface-light/10 flex items-center justify-center border-2 border-primary overflow-hidden">
+          <div className="w-16 h-16 rounded-full bg-bg-card border border-border flex items-center justify-center overflow-hidden">
             {user?.photo_url ? (
-              <img src={user.photo_url} alt={user.first_name} className="w-full h-full object-cover" />
+              <img src={user.photo_url} alt="" className="w-full h-full object-cover" />
             ) : (
-              <User className="w-8 h-8 text-primary" />
+              <User className="w-7 h-7 text-text-muted" />
             )}
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">
+            <h1 className="text-xl font-semibold text-white">
               {user ? `${user.first_name} ${user.last_name || ''}` : 'Гость'}
-            </h2>
+            </h1>
             <p className="text-text-secondary text-sm">
-              {user?.username ? `@${user.username}` : '+7 (999) 000-00-00'}
+              {user?.username ? `@${user.username}` : 'Добро пожаловать'}
             </p>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-2 gap-4 p-6">
-        <div className="bg-surface-dark p-4 rounded-xl border border-white/5">
-          <div className="text-3xl font-bold text-primary mb-1">12</div>
-          <div className="text-xs text-text-secondary uppercase tracking-wider">Всего посещений</div>
-        </div>
-        <div className="bg-surface-dark p-4 rounded-xl border border-white/5">
-          <div className="text-3xl font-bold text-white mb-1">0</div>
-          <div className="text-xs text-text-secondary uppercase tracking-wider">Бонусов</div>
+      {/* Stats */}
+      <div className="px-4 pb-6">
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-bg-card p-4 rounded-2xl border border-border text-center">
+            <p className="text-2xl font-semibold text-white">12</p>
+            <p className="text-text-muted text-xs mt-1">Визитов</p>
+          </div>
+          <div className="bg-bg-card p-4 rounded-2xl border border-border text-center">
+            <p className="text-2xl font-semibold text-white">500</p>
+            <p className="text-text-muted text-xs mt-1">Бонусов</p>
+          </div>
+          <div className="bg-bg-card p-4 rounded-2xl border border-border text-center">
+            <p className="text-2xl font-semibold text-white">4.9</p>
+            <p className="text-text-muted text-xs mt-1">Рейтинг</p>
+          </div>
         </div>
       </div>
 
       {/* Menu */}
-      <div className="px-6 space-y-2">
-        {menuItems.map((item, index) => (
-          <motion.button
-            key={index}
-            whileTap={{ scale: 0.98 }}
-            className="w-full bg-surface-dark p-4 rounded-xl border border-white/5 flex items-center justify-between group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-text-secondary group-hover:text-primary transition-colors">
-                <item.icon className="w-5 h-5" />
+      <div className="px-4 pb-28 flex flex-col gap-3">
+        {menuItems.map((item, i) => (
+          <Link key={i} href={item.href} className="block">
+            <div className="flex items-center justify-between p-4 bg-bg-card rounded-2xl border border-border active:scale-[0.99] transition-transform">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-bg-elevated flex items-center justify-center">
+                  <item.icon className={`w-5 h-5 ${item.color || 'text-text-secondary'}`} />
+                </div>
+                <span className="text-white font-medium">{item.label}</span>
               </div>
-              <span className="font-medium text-white">{item.label}</span>
+              <ChevronRight className="w-5 h-5 text-text-muted" />
             </div>
-            <ChevronRight className="w-5 h-5 text-white/20" />
-          </motion.button>
+          </Link>
         ))}
 
-        <motion.button
-            whileTap={{ scale: 0.98 }}
-            className="w-full bg-surface-dark p-4 rounded-xl border border-white/5 flex items-center justify-between group mt-6"
-          >
+        {/* Phone */}
+        <a href={`tel:${shopInfo.phoneClean}`} className="block mt-2">
+          <div className="flex items-center justify-between p-4 bg-bg-card rounded-2xl border border-border active:scale-[0.99] transition-transform">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500">
-                <LogOut className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+                <Phone className="w-5 h-5 text-success" />
               </div>
-              <span className="font-medium text-red-500">Выйти</span>
+              <div>
+                <span className="text-white font-medium block">Позвонить</span>
+                <span className="text-text-muted text-sm">{shopInfo.phone}</span>
+              </div>
             </div>
-          </motion.button>
+            <ChevronRight className="w-5 h-5 text-text-muted" />
+          </div>
+        </a>
       </div>
+
+      <BottomNav />
     </div>
   );
 }

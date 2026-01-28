@@ -1,21 +1,17 @@
 import type { Metadata } from "next";
-import { Manrope, Playfair_Display } from "next/font/google";
+import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin", "cyrillic"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin", "cyrillic"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Black Beard | Премиум Барбершоп",
-  description: "Запишитесь на стрижку в лучший барбершоп города",
+  title: "Black Beard",
+  description: "Премиум барбершоп в Москве",
 };
 
 export default function RootLayout({
@@ -24,16 +20,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#0a0a0a" />
         <Script
           src="https://telegram.org/js/telegram-web-app.js"
           strategy="beforeInteractive"
         />
       </head>
-      <body
-        className={`${manrope.variable} ${playfair.variable} antialiased min-h-screen bg-background-dark text-white`}
-      >
+      <body className={`${inter.variable} antialiased`}>
         {children}
       </body>
     </html>

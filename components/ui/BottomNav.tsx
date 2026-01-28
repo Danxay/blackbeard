@@ -1,32 +1,53 @@
-"use client";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Grid, Calendar, User } from "lucide-react";
-import clsx from "clsx";
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { Home, Calendar, User } from 'lucide-react'
+import clsx from 'clsx'
+
+const navItems = [
+    { href: '/', icon: Home, label: 'Главная' },
+    { href: '/bookings', icon: Calendar, label: 'Записи' },
+    { href: '/profile', icon: User, label: 'Профиль' },
+]
 
 export default function BottomNav() {
-    const pathname = usePathname();
-
-    const tabs = [
-        { name: "Главная", icon: Grid, href: "/" },
-        { name: "Записи", icon: Calendar, href: "/bookings" },
-        { name: "Профиль", icon: User, href: "/profile" },
-    ];
+    const pathname = usePathname()
 
     return (
-        <nav className="fixed bottom-0 w-full bg-background-dark border-t border-white/5 px-6 pb-6 pt-3 z-30 flex justify-between items-end">
-            {tabs.map(tab => {
-                const isActive = pathname === tab.href;
-                return (
-                    <Link key={tab.name} href={tab.href} className={clsx("flex flex-col items-center gap-1 w-16 transition-colors", isActive ? "text-primary" : "text-gray-400 hover:text-white")}>
-                        {isActive && <div className="absolute -top-3 w-8 h-1 bg-primary rounded-full shadow-[0_0_10px_#f4c025]"></div>}
-                        <div className="relative">
-                            <tab.icon className={clsx("w-6 h-6", isActive && "fill-current")} />
-                        </div>
-                        <span className={clsx("text-[10px] font-medium", isActive && "font-bold")}>{tab.name}</span>
-                    </Link>
-                )
-            })}
+        <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border safe-bottom">
+            <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
+                {navItems.map((item) => {
+                    const isActive = pathname === item.href
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={clsx(
+                                "flex flex-col items-center justify-center w-20 h-full transition-all",
+                                isActive ? "text-white" : "text-text-muted hover:text-text-secondary"
+                            )}
+                        >
+                            <item.icon
+                                className={clsx(
+                                    "w-5 h-5 mb-1 transition-transform",
+                                    isActive && "scale-110"
+                                )}
+                                strokeWidth={isActive ? 2.5 : 2}
+                            />
+                            <span className={clsx(
+                                "text-[10px] font-medium tracking-wide",
+                                isActive && "font-semibold"
+                            )}>
+                                {item.label}
+                            </span>
+                            {isActive && (
+                                <div className="absolute top-0 w-12 h-0.5 bg-white rounded-full" />
+                            )}
+                        </Link>
+                    )
+                })}
+            </div>
         </nav>
     )
 }

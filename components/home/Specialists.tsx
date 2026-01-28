@@ -1,33 +1,58 @@
-import Link from 'next/link';
+"use client";
 
-const specialists = [
-    { name: "Иван Петров", role: "Топ-мастер", rating: "4.9", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB0Tl2jx7LlD1kseB8lu1lC03NLLPOqRyuM6njrpB568v9OwRJ07ngzim_jpwmPdQhIX0tlsqxiX24nsB1FtxyxFIOFkxwwpHo5eRhtEza07_JmlhTi9tFHUif1XroY4WYzIQ1srv5CQqZ2pcGDfJuDvFfKb9Lm1Z2rqTdLTaz8lX2Hf1QrbG8QDgtx1LsYFUS7BuTDRE2XpqusOHzK-qo0tx9XaZTCRQzD1qgrlXsiAW-9-cZW5utr_gqRS_Db2kP683jfdg2zr81A" },
-    { name: "Михаил Росс", role: "Стилист", rating: "4.8", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAls0g8XNR3_5fTZjy1DjomdtDyAVTrknQQ6IVFiVIBEbv2lpvITEvOuZJ49spZIyzbw0dLlUFI5nIP3ywG6c66H1tyLwAHIaiR-wxHKYSxxv9m0bfEsGd1UXxVH7KJPAAh5sN2qrOpRjJzIdM0jzU2-dWtmqaqAai6AbY21mwB6rOw3m9IuV9lbmiOa_OuKkAatI2ACfwHJGrj58vNxoTTVcquBlwJPlKQGQfAEJeZvZNOHQrVpTp0ochM0Y-y-cm5g9ynFFLh34Rk" },
-    { name: "Алексей Смит", role: "Эксперт по бороде", rating: "4.7", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuC57R93ZEfNvb1__IQ7nkJ0-mpc_et-P5p_uHuT74GQBM5dX_be31ZcKV7BbbcyVZNQoZi1ZK5VTDiVvDVrRJNYm6ydvzQvDPzv2tEIgq2igzzgDwJn86Zm3kikTMT6-bs9QVLf_a-EW3_W66IR2sZZMSmbnXRS_jfhiYcwNt47KTVKzDkqjAwoutZyRIlkwVmBG7lQ6wMfQg_GKn7KXXgMnaJWQzdbS1k5wVqwYwwGRWs3KcnDV9JjNwFlNk16Wvncitfj7urvFEVA" },
-];
+import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
+import { barbers } from '@/data/barbers';
+import { useBookingStore } from '@/store/bookingStore';
 
 export default function Specialists() {
+    const { setBarber, setEntryPoint, reset } = useBookingStore();
+    const availableBarbers = barbers.filter(b => b.isAvailable).slice(0, 4);
+
+    const handleBarberClick = (barber: typeof barbers[0]) => {
+        reset(); // Сброс предыдущего выбора
+        setBarber(barber);
+        setEntryPoint('barber');
+    };
+
     return (
-        <div className="mb-8">
+        <section>
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-display font-bold text-white">Топ Барберы</h3>
-                <Link href="/book/barber" className="text-primary text-sm font-medium hover:text-primary-dim">Все</Link>
+                <h2 className="text-lg font-semibold text-white">Мастера</h2>
+                <Link
+                    href="/book/barber"
+                    className="flex items-center gap-1 text-text-secondary text-sm active:text-white"
+                >
+                    Все
+                    <ChevronRight className="w-4 h-4" />
+                </Link>
             </div>
-            <div className="flex overflow-x-auto gap-4 pb-2 -mx-6 px-6 no-scrollbar">
-                {specialists.map((s, i) => (
-                    <Link href="/book/barber" key={i} className="flex-shrink-0 w-36 group cursor-pointer">
-                        <div className="relative overflow-hidden rounded-xl mb-3 h-48">
-                            <img alt={s.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src={s.img} />
-                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-md flex items-center gap-1">
-                                <span className="text-primary text-[10px]">★</span>
-                                <span className="text-white text-[10px] font-bold">{s.rating}</span>
+
+            <div className="flex gap-3 overflow-x-auto -mx-4 px-4 pb-2 no-scrollbar">
+                {availableBarbers.map((barber) => (
+                    <Link
+                        href="/services"
+                        key={barber.id}
+                        onClick={() => handleBarberClick(barber)}
+                        className="flex-shrink-0 w-28 group"
+                    >
+                        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-bg-card mb-2">
+                            <img
+                                alt={barber.name}
+                                className="w-full h-full object-cover transition-transform duration-300 group-active:scale-105"
+                                src={barber.image}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                            {/* Info */}
+                            <div className="absolute bottom-2 left-2 right-2">
+                                <p className="text-white text-sm font-medium truncate">{barber.name.split(' ')[0]}</p>
+                                <p className="text-text-muted text-[11px]">{barber.rating} ★</p>
                             </div>
                         </div>
-                        <h4 className="font-bold text-white text-base">{s.name}</h4>
-                        <p className="text-xs text-gray-400">{s.role}</p>
                     </Link>
                 ))}
             </div>
-        </div>
-    )
+        </section>
+    );
 }

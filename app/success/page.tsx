@@ -1,93 +1,140 @@
 "use client";
-import { CheckCircle, Calendar, Clock, Scissors, Check } from "lucide-react";
+import { Check, Calendar, Clock, Home } from "lucide-react";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { useBookingStore } from "@/store/bookingStore";
+import { shopInfo } from "@/data/shop";
+import { useEffect } from "react";
 
 export default function SuccessPage() {
+    const {
+        selectedBarber,
+        selectedServices,
+        selectedDate,
+        selectedTime,
+        getTotalPrice,
+        getTotalDuration,
+        reset
+    } = useBookingStore();
+
+    const total = getTotalPrice();
+    const duration = getTotalDuration();
+
+    const dateStr = selectedDate
+        ? selectedDate.toLocaleDateString('ru', { day: 'numeric', month: 'short' })
+        : '';
+
+    const handleAddToCalendar = () => {
+        if (!selectedDate || !selectedTime) return;
+
+        const [hours, minutes] = selectedTime.split(':').map(Number);
+        const startDate = new Date(selectedDate);
+        startDate.setHours(hours, minutes, 0, 0);
+        const endDate = new Date(startDate);
+        endDate.setMinutes(endDate.getMinutes() + duration);
+
+        const title = `${selectedServices.map(s => s.name).join(', ')} — ${shopInfo.name}`;
+        const details = selectedBarber
+            ? `Мастер: ${selectedBarber.name}\n${shopInfo.address.full}`
+            : shopInfo.address.full;
+
+        const formatDate = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+        const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatDate(startDate)}/${formatDate(endDate)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(shopInfo.address.full)}`;
+        window.open(calendarUrl, '_blank');
+    };
+
+    const handleGoHome = () => {
+        reset();
+    };
+
     return (
-        <main className="min-h-screen bg-background-dark flex flex-col relative overflow-hidden">
-             {/* Background */}
-            <div className="absolute inset-0 z-0">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542838686-37da5a9fd500?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay"></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-background-dark via-background-dark/95 to-background-dark"></div>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-primary/10 blur-[120px] rounded-full pointer-events-none"></div>
+        <main className="min-h-screen bg-bg flex flex-col">
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                {/* Success icon */}
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mb-6"
+                >
+                    <Check className="w-10 h-10 text-success" strokeWidth={3} />
+                </motion.div>
+
+                <motion.h1
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-2xl font-semibold text-white mb-2"
+                >
+                    Записано!
+                </motion.h1>
+
+                <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-text-secondary mb-8"
+                >
+                    Ждём вас в {shopInfo.name}
+                </motion.p>
+
+                {/* Details */}
+                {selectedBarber && selectedServices.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="w-full bg-bg-card rounded-2xl border border-border p-4 text-left"
+                    >
+                        <div className="flex items-center gap-3 pb-4 border-b border-border">
+                            <img
+                                src={selectedBarber.image}
+                                alt={selectedBarber.name}
+                                className="w-12 h-12 rounded-xl object-cover"
+                            />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-white font-medium truncate">
+                                    {selectedServices.map(s => s.name).join(', ')}
+                                </p>
+                                <p className="text-text-muted text-sm">{selectedBarber.name}</p>
+                            </div>
+                            <p className="text-white font-semibold">{total} ₽</p>
+                        </div>
+
+                        <div className="flex pt-4 gap-4">
+                            <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-text-secondary" />
+                                <span className="text-white text-sm">{dateStr}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-text-secondary" />
+                                <span className="text-white text-sm">{selectedTime}</span>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
             </div>
 
-            <div className="relative z-10 flex flex-col flex-1 px-6 py-8">
-                 {/* Success Indicator */}
-                 <div className="flex flex-col items-center justify-center pt-8 pb-8 text-center animate-bounce">
-                     <div className="relative mb-6">
-                         <div className="flex items-center justify-center w-24 h-24 rounded-full bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(244,192,37,0.4)]">
-                             <Check className="text-primary w-12 h-12" />
-                         </div>
-                     </div>
-                     <h1 className="text-white text-[32px] font-bold leading-tight mb-2 tracking-tight">Запись подтверждена!</h1>
-                     <p className="text-white/60 text-base font-medium leading-relaxed max-w-[280px]">
-                        Ваша запись успешно создана. Ждем вас!
-                     </p>
-                 </div>
+            {/* Actions */}
+            <div className="p-4 pb-6 space-y-3">
+                <button
+                    onClick={handleAddToCalendar}
+                    className="flex items-center justify-center gap-2 w-full bg-white text-black py-4 rounded-2xl font-semibold active:scale-[0.98] transition-transform"
+                >
+                    <Calendar className="w-5 h-5" />
+                    Добавить в календарь
+                </button>
 
-                 {/* Receipt */}
-                 <div className="w-full bg-[#2d281a]/60 backdrop-blur-md border border-white/5 rounded-2xl p-5 mb-auto shadow-2xl">
-                     <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/5">
-                         <span className="text-xs uppercase tracking-widest text-primary/80 font-bold">Квитанция #8832</span>
-                         <span className="bg-primary/20 text-primary text-xs font-bold px-2 py-1 rounded">ОПЛАЧЕНО</span>
-                     </div>
-
-                     <div className="flex items-center gap-4 mb-4">
-                         <div className="flex items-center justify-center rounded-xl bg-gradient-to-br from-[#493f22] to-[#3a321b] shrink-0 w-14 h-14 shadow-inner border border-white/5">
-                             <Scissors className="text-white w-7 h-7" />
-                         </div>
-                         <div className="flex flex-col flex-1">
-                             <p className="text-white text-lg font-bold leading-tight">Королевское бритье</p>
-                             <p className="text-[#cbbc90] text-sm font-normal">Стрижка и Борода</p>
-                         </div>
-                         <div className="text-right">
-                             <p className="text-white font-bold text-lg">4500 ₽</p>
-                         </div>
-                     </div>
-
-                     <div className="flex items-center gap-4 mb-4">
-                         <div className="relative shrink-0 w-14 h-14">
-                             <div className="w-full h-full rounded-xl bg-center bg-cover border border-white/10" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBISQ0TfeJRuJAC9toNyzyIGlU1BUgzELlyaDkOnK1t9e1wlFdVXcXTZxdNsZLkexHEalFr5fsfmN5j_AppBEG5fbjOq2RqQqh4w1nFgxTxSDZuQ1CTXEaNo2lipI0RZ70ZoQr2Ez8GYmWvBSxNHhGQvO-xjdT_fYjshIyGmI2WHNRTLmHYR8-m3eRL5ucRkdPR8vRTD3f2fpIT9NpQxJbFNDoQ0rGHynJTO4QsA29MnvHo9QdM5RIa9AELoxKEJYL2E6ZGeFZCUI8d')" }}></div>
-                             <div className="absolute -bottom-1 -right-1 bg-primary text-background-dark rounded-full p-0.5 border-2 border-background-dark">
-                                 <CheckCircle className="w-3 h-3 fill-primary text-background-dark" />
-                             </div>
-                         </div>
-                         <div className="flex flex-col flex-1">
-                             <p className="text-white text-base font-bold leading-tight">Алексей "The Blade"</p>
-                             <p className="text-[#cbbc90] text-sm font-normal">Топ-мастер</p>
-                         </div>
-                     </div>
-
-                     <div className="bg-background-dark/50 rounded-xl p-4 flex items-center justify-between border border-white/5">
-                         <div className="flex items-center gap-3">
-                             <Calendar className="text-primary w-5 h-5" />
-                             <div className="flex flex-col">
-                                 <span className="text-white/60 text-xs">Дата</span>
-                                 <span className="text-white font-semibold text-sm">Пт, 24 Окт</span>
-                             </div>
-                         </div>
-                         <div className="w-px h-8 bg-white/10"></div>
-                         <div className="flex items-center gap-3">
-                             <Clock className="text-primary w-5 h-5" />
-                             <div className="flex flex-col text-right">
-                                 <span className="text-white/60 text-xs">Время</span>
-                                 <span className="text-white font-semibold text-sm">14:00</span>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-
-                 <div className="flex flex-col gap-3 mt-6">
-                     <button className="group relative w-full flex items-center justify-center gap-2 bg-primary active:bg-[#d9aa20] text-background-dark font-bold text-lg py-4 rounded-xl shadow-[0_4px_20px_rgba(244,192,37,0.25)] transition-all transform active:scale-[0.98]">
-                         <Calendar className="w-5 h-5" />
-                         <span>Добавить в календарь</span>
-                     </button>
-                     <Link href="/" className="w-full flex items-center justify-center gap-2 text-white/50 hover:text-white font-semibold text-base py-3 transition-colors">
-                        На главную
-                     </Link>
-                 </div>
+                <Link
+                    href="/"
+                    onClick={handleGoHome}
+                    className="flex items-center justify-center gap-2 w-full bg-bg-card text-white py-4 rounded-2xl font-medium border border-border"
+                >
+                    <Home className="w-5 h-5" />
+                    На главную
+                </Link>
             </div>
         </main>
-    )
+    );
 }
