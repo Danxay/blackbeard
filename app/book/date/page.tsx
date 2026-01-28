@@ -1,117 +1,199 @@
 "use client";
 import Header from "@/components/ui/Header";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import clsx from "clsx";
-import { Sun, ArrowRight } from "lucide-react";
+import { ArrowRight, Clock } from "lucide-react";
 import Link from "next/link";
+import { useBookingStore } from "@/store/bookingStore";
+import { useRouter } from "next/navigation";
 
-const days = [
-    { day: "Ср", date: "18", active: true },
-    { day: "Чт", date: "19" },
-    { day: "Пт", date: "20" },
-    { day: "Сб", date: "21", disabled: true },
-    { day: "Вс", date: "22", disabled: true },
-    { day: "Пн", date: "23" },
-]
+function generateDays() {
+    const days = [];
+    const dayNames = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+    const today = new Date();
 
-const morningSlots = ["10:00", "10:30", "11:00", "11:30"];
-const afternoonSlots = ["13:00", "13:30", "14:00", "14:30", "15:00"];
+    for (let i = 0; i < 14; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 0;
+
+        days.push({
+            name: dayNames[dayOfWeek],
+            date: date.getDate(),
+            month: date.toLocaleDateString('ru', { month: 'short' }),
+            fullDate: date,
+            disabled: isWeekend
+        });
+    }
+    return days;
+}
+
+const timeSlots = ["10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
 
 export default function DatePage() {
-    const [selectedTime, setSelectedTime] = useState("13:00");
+    const router = useRouter();
+    const {
+        selectedBarber,
+        selectedServices,
+        selectedTime,
+        setDate,
+        setTime,
+        getTotalPrice,
+        getTotalDuration
+    } = useBookingStore();
+
+    const days = useMemo(() => generateDays(), []);
+
+    // Находим первый доступный день (не воскресенье)
+    const firstAvailableIndex = useMemo(() => {
+        return days.findIndex(d => !d.disabled);
+    }, [days]);
+
+    const [selectedDayIndex, setSelectedDayIndex] = useState(firstAvailableIndex >= 0 ? firstAvailableIndex : 0);
+
+    const total = getTotalPrice();
+    const duration = getTotalDuration();
+
+    // Устанавливаем дату по умолчанию при загрузке
+    useEffect(() => {
+        if (days[selectedDayIndex] && !days[selectedDayIndex].disabled) {
+            setDate(days[selectedDayIndex].fullDate);
+        }
+    }, []);
+
+    // Редирект если нет данных
+    useEffect(() => {
+        if (!selectedBarber || selectedServices.length === 0) {
+            router.push('/services');
+        }
+    }, [selectedBarber, selectedServices, router]);
+
+    const handleDaySelect = (index: number) => {
+        if (!days[index].disabled) {
+            setSelectedDayIndex(index);
+            setDate(days[index].fullDate);
+        }
+    };
+
+    const handleTimeSelect = (time: string) => {
+        setTime(time);
+        // Убеждаемся что дата установлена
+        if (!days[selectedDayIndex].disabled) {
+            setDate(days[selectedDayIndex].fullDate);
+        }
+    };
+
+    const canProceed = selectedTime !== null;
 
     return (
-        <main className="min-h-screen bg-background-dark pb-32 flex flex-col relative overflow-hidden">
-            <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-                 <img alt="Abstract texture" className="w-full h-full object-cover blur-xl grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZDPM0PFYuJZ5fd-Xvfulr8M9QoJy7DMyieGlwD_a41SuRqmMau9BEBUa-qvFmQNS_WpBaWRzDUXX275VhMThc9kzEjzIHQig-KQwS5NxwWQ0hbHSftJ0wQ4yve1Zauc7jcnVm4PKvFoc5MPk4cPjWcN1uR21dITRzi88VP2mqAjFaBm5OkYWUOgGsA3PWkJEVRqI1MSdOQ5yL2OS_sruY2MLdNeRDtPA4x2k2xwQBRqnAaxumjKaJHaYQ0p6nBZxH6zoc62rL70Cj" />
-            </div>
+        <main className="min-h-screen bg-bg">
+            <Header title="Дата и время" />
 
-            <Header title="Black Beard" />
-
-            <div className="relative z-10 px-4 pt-2">
-                <div className="mb-6 mt-2">
-                    <h2 className="text-3xl font-display font-bold text-white mb-1">Запись</h2>
-                    <p className="text-gray-400 text-sm">Выберите дату и время визита</p>
-                </div>
+            <div className="p-4 pb-48 space-y-6">
+                {/* Selected info */}
+                {selectedBarber && (
+                    <div className="flex items-center gap-3 p-3 bg-bg-card rounded-xl border border-border">
+                        <img
+                            src={selectedBarber.image}
+                            alt={selectedBarber.name}
+                            className="w-10 h-10 rounded-lg object-cover"
+                        />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-medium truncate">{selectedBarber.name}</p>
+                            <p className="text-text-muted text-xs">
+                                {selectedServices.length} услуг · {duration} мин
+                            </p>
+                        </div>
+                        <p className="text-white font-semibold">{total} ₽</p>
+                    </div>
+                )}
 
                 {/* Calendar */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-4 px-1">
-                        <span className="text-sm font-semibold uppercase tracking-wider text-gray-400">Октябрь 2023</span>
-                    </div>
-                    <div className="flex space-x-3 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4">
+                <div>
+                    <p className="text-text-secondary text-sm mb-3">Выберите день</p>
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 pb-2">
                         {days.map((d, i) => (
-                            <div key={i} className={clsx(
-                                "flex-shrink-0 flex flex-col items-center justify-center w-16 h-20 rounded-2xl border transition-all cursor-pointer",
-                                d.active ? "bg-primary border-primary text-background-dark shadow-[0_0_15px_rgba(200,161,101,0.2)] scale-105" :
-                                d.disabled ? "bg-surface-dark border-white/5 opacity-50 cursor-not-allowed" : "bg-surface-dark border-white/5 hover:border-primary/50 text-gray-300"
-                            )}>
-                                <span className={clsx("text-xs font-medium uppercase mb-1", d.active ? "text-background-dark/80" : "text-gray-400")}>{d.day}</span>
-                                <span className="text-2xl font-bold font-display">{d.date}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Slots */}
-                <div className="mb-4">
-                    <h3 className="text-xs text-gray-400 mb-3 ml-1 flex items-center gap-2">
-                        <Sun className="w-4 h-4" /> Утро
-                    </h3>
-                    <div className="grid grid-cols-3 gap-3 mb-6">
-                        {morningSlots.map(time => (
-                            <button key={time} onClick={() => setSelectedTime(time)} className={clsx(
-                                "py-3 px-2 rounded-xl border font-medium text-sm transition-colors",
-                                selectedTime === time ? "bg-primary/20 border-primary text-primary" : "bg-surface-dark border-white/5 text-gray-300 hover:bg-white/5"
-                            )}>
-                                {time}
-                            </button>
-                        ))}
-                    </div>
-
-                    <h3 className="text-xs text-gray-400 mb-3 ml-1 flex items-center gap-2">
-                        <Sun className="w-4 h-4" /> День
-                    </h3>
-                     <div className="grid grid-cols-3 gap-3">
-                        {afternoonSlots.map(time => (
-                            <button key={time} onClick={() => setSelectedTime(time)} className={clsx(
-                                "py-3 px-2 rounded-xl border font-medium text-sm transition-colors relative overflow-hidden",
-                                selectedTime === time ? "bg-primary/20 border-primary text-primary" : "bg-surface-dark border-white/5 text-gray-300 hover:bg-white/5"
-                            )}>
-                                {time}
+                            <button
+                                key={i}
+                                onClick={() => handleDaySelect(i)}
+                                disabled={d.disabled}
+                                className={clsx(
+                                    "flex flex-col items-center justify-center w-16 h-20 rounded-xl flex-shrink-0 transition-all",
+                                    d.disabled && "opacity-40 cursor-not-allowed",
+                                    selectedDayIndex === i
+                                        ? "bg-white text-black"
+                                        : "bg-bg-card border border-border"
+                                )}
+                            >
+                                <span className={clsx(
+                                    "text-[10px] uppercase font-medium",
+                                    selectedDayIndex === i ? "text-black/60" : "text-text-muted"
+                                )}>
+                                    {d.name}
+                                </span>
+                                <span className="text-xl font-semibold">{d.date}</span>
+                                <span className={clsx(
+                                    "text-[10px]",
+                                    selectedDayIndex === i ? "text-black/60" : "text-text-muted"
+                                )}>
+                                    {d.month}
+                                </span>
                             </button>
                         ))}
                     </div>
                 </div>
 
-                {/* Selected Barber Preview */}
-                <div className="mt-6 p-4 rounded-2xl bg-surface-dark border border-white/5 flex items-center gap-4">
-                    <img alt="Barber" className="w-12 h-12 rounded-full object-cover border-2 border-primary" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfzYgpP9gI84S1Ro5D2-nk2ehM3xIrMIKRWwamG31qDp2ekFdHxPFzowUB-ZbjTeJ7lOb1qFdLg8pGA-d2sn1Xm4Q3GaMm-Eb00xCcVdFdyVvs6QayceAvejlxtTUCaH0kZd8NZVjOBpkq6t3iWj_j788p2iiuSkl7oxcX2KPVb2b3WRoprPJEHvVQozN6cOY4OuxzXZbgHmkJqXfxAShrm2mSoZp7wZlXYmfkQvXxqyP82JRMPthLPlh4t2AJb0HmGslwTXOdDq7n" />
-                    <div className="flex-1">
-                        <p className="text-xs text-gray-400 uppercase tracking-wide">Мастер</p>
-                        <p className="font-display font-bold text-white">Алексей "The Fade"</p>
+                {/* Time slots */}
+                <div>
+                    <p className="text-text-secondary text-sm mb-3">Выберите время</p>
+                    <div className="grid grid-cols-4 gap-2">
+                        {timeSlots.map(time => (
+                            <button
+                                key={time}
+                                onClick={() => handleTimeSelect(time)}
+                                className={clsx(
+                                    "py-3 rounded-xl text-sm font-medium transition-all",
+                                    selectedTime === time
+                                        ? "bg-white text-black"
+                                        : "bg-bg-card border border-border text-white"
+                                )}
+                            >
+                                {time}
+                            </button>
+                        ))}
                     </div>
-                    <Link href="/book/barber" className="text-primary text-sm font-medium hover:text-white transition-colors">Изменить</Link>
                 </div>
             </div>
 
             {/* Footer */}
-            <div className="fixed bottom-0 left-0 right-0 z-20 bg-background-dark/90 border-t border-white/5 p-4 pb-8 backdrop-blur-md">
-                <div className="flex items-center justify-between mb-4 px-2">
+            <div className="fixed bottom-0 left-0 right-0 p-4 pb-8 glass border-t border-border">
+                <div className="flex items-center justify-between mb-3 px-1">
                     <div>
-                        <p className="text-xs text-gray-400">Итого</p>
-                        <p className="text-xl font-bold text-white font-display">2500 ₽</p>
+                        <p className="text-white text-sm">
+                            {days[selectedDayIndex]?.date} {days[selectedDayIndex]?.month}{selectedTime ? `, ${selectedTime}` : ''}
+                        </p>
+                        <p className="text-text-muted text-xs flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {duration} мин
+                        </p>
                     </div>
-                    <div className="text-right">
-                        <p className="text-xs text-gray-400">Длительность</p>
-                        <p className="text-sm font-medium text-white">45 мин</p>
-                    </div>
+                    <p className="text-white text-2xl font-semibold">{total} ₽</p>
                 </div>
-                <Link href="/book/confirm" className="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 hover:bg-opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                    <span>Подтвердить запись</span>
-                    <ArrowRight className="w-4 h-4" />
+                <Link
+                    href={canProceed ? "/book/confirm" : "#"}
+                    className={clsx(
+                        "flex items-center justify-between w-full py-4 px-6 rounded-2xl font-semibold transition-all",
+                        canProceed
+                            ? "bg-white text-black active:scale-[0.98]"
+                            : "bg-bg-card text-text-muted cursor-not-allowed"
+                    )}
+                    onClick={(e) => !canProceed && e.preventDefault()}
+                >
+                    <span>{canProceed ? 'Подтвердить' : 'Выберите время'}</span>
+                    <ArrowRight className="w-5 h-5" />
                 </Link>
             </div>
         </main>
-    )
+    );
 }

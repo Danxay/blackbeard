@@ -1,25 +1,37 @@
 "use client";
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Bell } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
-export default function Header({ title, showBack = true }: { title: string, showBack?: boolean }) {
+interface HeaderProps {
+    title: string;
+    showBack?: boolean;
+    showNotifications?: boolean;
+}
+
+export default function Header({ title, showBack = true }: HeaderProps) {
     const router = useRouter();
+
     return (
-        <header className="relative z-20 pt-12 pb-4 px-6 bg-gradient-to-b from-background-dark via-background-dark/80 to-transparent flex items-center justify-between">
-            {showBack ? (
-                <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white transition">
-                    <ArrowLeft className="w-6 h-6" />
-                </button>
-            ) : <div className="w-10" />}
+        <header className="sticky top-0 z-40 glass border-b border-border">
+            <div className="flex items-center justify-between h-14 px-4">
+                {showBack ? (
+                    <button
+                        onClick={() => router.back()}
+                        className="flex items-center justify-center w-10 h-10 -ml-2 rounded-full hover:bg-bg-hover text-white transition-colors"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+                ) : (
+                    <div className="w-10" />
+                )}
 
-            <div className="text-center">
-                <h1 className="font-display font-bold text-xl tracking-wider text-white uppercase">{title}</h1>
+                <h1 className="text-base font-semibold text-white tracking-tight">
+                    {title}
+                </h1>
+
+                <div className="w-10" />
             </div>
-
-            <button className="p-2 -mr-2 rounded-full hover:bg-white/10 text-white transition relative">
-                <Bell className="w-6 h-6" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
-            </button>
         </header>
-    )
+    );
 }
