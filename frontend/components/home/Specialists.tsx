@@ -1,19 +1,34 @@
 "use client";
 
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
-import { barbers } from '@/data/barbers';
+import { ChevronRight, Loader2 } from 'lucide-react';
+import { useBarbers } from '@/hooks/useBarbers';
 import { useBookingStore } from '@/store/bookingStore';
+import { Barber } from '@/lib/api';
 
 export default function Specialists() {
+    const { barbers, isLoading } = useBarbers();
     const { setBarber, setEntryPoint, reset } = useBookingStore();
-    const availableBarbers = barbers.filter(b => b.isAvailable).slice(0, 4);
+    const availableBarbers = barbers.filter(b => b.is_available).slice(0, 4);
 
-    const handleBarberClick = (barber: typeof barbers[0]) => {
-        reset(); // Сброс предыдущего выбора
+    const handleBarberClick = (barber: Barber) => {
+        reset();
         setBarber(barber);
         setEntryPoint('barber');
     };
+
+    if (isLoading) {
+        return (
+            <section>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold text-white">Мастера</h2>
+                </div>
+                <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section>
@@ -44,7 +59,6 @@ export default function Specialists() {
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                            {/* Info */}
                             <div className="absolute bottom-2 left-2 right-2">
                                 <p className="text-white text-sm font-medium truncate">{barber.name.split(' ')[0]}</p>
                                 <p className="text-text-muted text-[11px]">{barber.rating} ★</p>

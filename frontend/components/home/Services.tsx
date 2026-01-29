@@ -1,19 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, ChevronRight } from "lucide-react";
-import { services } from "@/data/services";
+import { Clock, ChevronRight, Loader2, Scissors, Sparkles, Crown, Star, Droplets, Wind } from "lucide-react";
+import { useServices } from "@/hooks/useServices";
 import { useBookingStore } from "@/store/bookingStore";
+import { Service } from "@/lib/api";
+import { LucideIcon } from "lucide-react";
+
+// Map icon names from backend to components
+const iconComponents: Record<string, LucideIcon> = {
+    Scissors,
+    Sparkles,
+    Crown,
+    Star,
+    Droplets,
+    Wind,
+};
+
+function getIconComponent(iconName: string): LucideIcon {
+    return iconComponents[iconName] || Scissors;
+}
 
 export default function Services() {
+    const { services, isLoading } = useServices();
     const { reset, addService, setEntryPoint } = useBookingStore();
     const popularServices = services.filter(s => s.popular).slice(0, 3);
 
-    const handleServiceClick = (service: typeof services[0]) => {
+    const handleServiceClick = (service: Service) => {
         reset();
         addService(service);
         setEntryPoint('services');
     };
+
+    if (isLoading) {
+        return (
+            <section>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold text-white">Популярные услуги</h2>
+                </div>
+                <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section>
@@ -30,7 +60,7 @@ export default function Services() {
 
             <div className="space-y-2">
                 {popularServices.map((service) => {
-                    const Icon = service.icon;
+                    const Icon = getIconComponent(service.icon);
                     return (
                         <Link
                             key={service.id}

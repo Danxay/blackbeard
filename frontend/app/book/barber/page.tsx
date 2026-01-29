@@ -1,13 +1,15 @@
 "use client";
 import Header from "@/components/ui/Header";
 import Link from "next/link";
-import { Star, ChevronRight, Check } from "lucide-react";
+import Image from "next/image";
+import { Star, ChevronRight, Check, Loader2 } from "lucide-react";
 import clsx from "clsx";
-import { barbers, Barber } from "@/data/barbers";
+import { useBarbers } from "@/hooks/useBarbers";
 import { useBookingStore } from "@/store/bookingStore";
 import { useEffect } from "react";
 
 export default function SelectBarber() {
+    const { barbers, isLoading } = useBarbers();
     const {
         selectedBarber,
         setBarber,
@@ -16,16 +18,25 @@ export default function SelectBarber() {
         entryPoint
     } = useBookingStore();
 
-    // Если пришли сюда напрямую (без выбора услуг) — устанавливаем entry point
     useEffect(() => {
         if (selectedServices.length === 0 && !entryPoint) {
             setEntryPoint('barber');
         }
-    }, []);
+    }, [selectedServices.length, entryPoint, setEntryPoint]);
 
-    // Определяем следующий шаг
     const nextStep = selectedServices.length > 0 ? '/book/date' : '/services';
     const buttonText = selectedServices.length > 0 ? 'Выбрать время' : 'Выбрать услуги';
+
+    if (isLoading) {
+        return (
+            <main className="min-h-screen bg-bg">
+                <Header title="Выберите мастера" />
+                <div className="flex items-center justify-center h-[60vh]">
+                    <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="min-h-screen bg-bg">
@@ -34,7 +45,7 @@ export default function SelectBarber() {
             <div className="p-4 pb-32 space-y-2">
                 {barbers.map(barber => {
                     const isSelected = selectedBarber?.id === barber.id;
-                    const isAvailable = barber.isAvailable;
+                    const isAvailable = barber.is_available;
 
                     return (
                         <div
@@ -51,10 +62,12 @@ export default function SelectBarber() {
                         >
                             {/* Avatar */}
                             <div className="relative w-14 h-14 flex-shrink-0">
-                                <img
-                                    src={barber.image}
+                                <Image
+                                    src={barber.image || '/placeholder.jpg'}
                                     alt={barber.name}
-                                    className="w-full h-full object-cover rounded-xl"
+                                    fill
+                                    className="object-cover rounded-xl"
+                                    unoptimized
                                 />
                                 {!isAvailable && (
                                     <div className="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center">
@@ -67,9 +80,6 @@ export default function SelectBarber() {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                     <h3 className="text-white font-medium truncate">{barber.name}</h3>
-                                    {barber.isVerified && (
-                                        <span className="text-[10px] text-accent bg-accent-soft px-1.5 py-0.5 rounded">PRO</span>
-                                    )}
                                 </div>
                                 <p className="text-text-muted text-sm">{barber.role}</p>
                                 <p className="text-text-muted text-xs mt-1">{barber.experience}</p>

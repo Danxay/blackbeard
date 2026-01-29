@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useBookingStore } from "@/store/bookingStore";
 import { shopInfo } from "@/data/shop";
-import { useEffect } from "react";
+
 
 export default function SuccessPage() {
     const {

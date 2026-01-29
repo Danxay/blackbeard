@@ -1,6 +1,7 @@
 "use client";
 import Header from "@/components/ui/Header";
-import { useState, useMemo, useEffect } from "react";
+import Image from "next/image";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import clsx from "clsx";
 import { ArrowRight, Clock } from "lucide-react";
 import Link from "next/link";
@@ -60,7 +61,7 @@ export default function DatePage() {
         if (days[selectedDayIndex] && !days[selectedDayIndex].disabled) {
             setDate(days[selectedDayIndex].fullDate);
         }
-    }, []);
+    }, [days, selectedDayIndex, setDate]);
 
     // Редирект если нет данных
     useEffect(() => {
@@ -69,20 +70,20 @@ export default function DatePage() {
         }
     }, [selectedBarber, selectedServices, router]);
 
-    const handleDaySelect = (index: number) => {
+    const handleDaySelect = useCallback((index: number) => {
         if (!days[index].disabled) {
             setSelectedDayIndex(index);
             setDate(days[index].fullDate);
         }
-    };
+    }, [days, setDate]);
 
-    const handleTimeSelect = (time: string) => {
+    const handleTimeSelect = useCallback((time: string) => {
         setTime(time);
         // Убеждаемся что дата установлена
         if (!days[selectedDayIndex].disabled) {
             setDate(days[selectedDayIndex].fullDate);
         }
-    };
+    }, [days, selectedDayIndex, setDate, setTime]);
 
     const canProceed = selectedTime !== null;
 
@@ -94,11 +95,15 @@ export default function DatePage() {
                 {/* Selected info */}
                 {selectedBarber && (
                     <div className="flex items-center gap-3 p-3 bg-bg-card rounded-xl border border-border">
-                        <img
-                            src={selectedBarber.image}
-                            alt={selectedBarber.name}
-                            className="w-10 h-10 rounded-lg object-cover"
-                        />
+                        <div className="relative w-10 h-10 flex-shrink-0">
+                            <Image
+                                src={selectedBarber.image || '/placeholder.jpg'}
+                                alt={selectedBarber.name}
+                                fill
+                                className="object-cover rounded-lg"
+                                unoptimized
+                            />
+                        </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-white text-sm font-medium truncate">{selectedBarber.name}</p>
                             <p className="text-text-muted text-xs">
