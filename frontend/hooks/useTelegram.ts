@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+'use client';
+
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 
 interface TelegramUser {
     id: number;
@@ -27,17 +29,33 @@ declare global {
     }
 }
 
-export function useTelegram() {
-    const [isMounted, setIsMounted] = useState(false);
-    const [tg, setTg] = useState<TelegramWebApp | null>(null);
-    const [user, setUser] = useState<TelegramUser | null>(null);
+// Server snapshot always returns null
+function getServerSnapshot(): TelegramWebApp | null {
+    return null;
+}
 
+// Client snapshot returns the actual WebApp
+function getSnapshot(): TelegramWebApp | null {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        return window.Telegram.WebApp;
+    }
+    return null;
+}
+
+// Subscribe function (no-op since Telegram WebApp doesn't change)
+function subscribe(): () => void {
+    return () => { };
+}
+
+export function useTelegram() {
+    const webApp = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+    const isInitializedRef = useRef(false);
+
+    // Initialize WebApp once (using ref to avoid lint warning about setState in effect)
     useEffect(() => {
-        setIsMounted(true);
-        
-        // Безопасная проверка только на клиенте
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-            const webApp = window.Telegram.WebApp;
+        if (webApp && !isInitializedRef.current) {
+            isInitializedRef.current = true;
+
             webApp.ready();
 
             try {
@@ -46,9 +64,6 @@ export function useTelegram() {
                 console.warn("Failed to expand WebApp:", e);
             }
 
-            setTg(webApp);
-            setUser(webApp.initDataUnsafe?.user || null);
-
             try {
                 webApp.setHeaderColor('#221e10');
                 webApp.setBackgroundColor('#221e10');
@@ -56,18 +71,19 @@ export function useTelegram() {
                 console.warn("Failed to set colors:", e);
             }
         }
-    }, []);
+    }, [webApp]);
 
     const onClose = () => {
-        tg?.close();
+        webApp?.close();
     };
+
+    const user = webApp?.initDataUnsafe?.user || null;
 
     return {
-        tg,
+        tg: webApp,
         user,
         onClose,
-        isReady: isMounted && !!tg,
-        isMounted
+        isReady: !!webApp,
+        isMounted: typeof window !== 'undefined'
     };
 }
-

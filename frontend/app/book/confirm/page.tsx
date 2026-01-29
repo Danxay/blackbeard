@@ -1,14 +1,21 @@
 "use client";
 import Header from "@/components/ui/Header";
-import { Calendar, Clock, MapPin, ArrowRight, User, Scissors } from "lucide-react";
+import Image from "next/image";
+import { Calendar, Clock, MapPin, ArrowRight, User, Scissors, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useBookingStore } from "@/store/bookingStore";
 import { shopInfo } from "@/data/shop";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import { useTelegram } from "@/hooks/useTelegram";
 
 export default function ConfirmPage() {
     const router = useRouter();
+    const { user } = useTelegram();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
     const {
         selectedBarber,
         selectedServices,
@@ -26,7 +33,39 @@ export default function ConfirmPage() {
         if (!selectedBarber || selectedServices.length === 0 || !selectedTime) {
             router.push('/services');
         }
-    }, []);
+    }, [selectedBarber, selectedServices.length, selectedTime, router]);
+
+    const handleConfirm = async () => {
+        if (!selectedBarber || !selectedDate || !selectedTime || !user) {
+            setError('Не все данные заполнены');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setError(null);
+
+        try {
+            await api.createBooking({
+                telegram_id: user.id,
+                chat_id: user.id, // В Telegram Mini Apps chat_id = user_id
+                first_name: user.first_name,
+                username: user.username,
+                barber_id: selectedBarber.id,
+                service_ids: selectedServices.map(s => s.id),
+                date: selectedDate.toISOString().split('T')[0],
+                time: selectedTime,
+                total_price: total,
+                total_duration: duration
+            });
+
+            router.push('/success');
+        } catch (err) {
+            console.error('Booking error:', err);
+            setError('Не удалось создать запись. Попробуйте ещё раз.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     if (!selectedBarber || selectedServices.length === 0) {
         return null;
@@ -48,11 +87,15 @@ export default function ConfirmPage() {
                         <span>Мастер</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <img
-                            src={selectedBarber.image}
-                            alt={selectedBarber.name}
-                            className="w-12 h-12 rounded-xl object-cover"
-                        />
+                        <div className="relative w-12 h-12 flex-shrink-0">
+                            <Image
+                                src={selectedBarber.image || '/placeholder.jpg'}
+                                alt={selectedBarber.name}
+                                fill
+                                className="object-cover rounded-xl"
+                                unoptimized
+                            />
+                        </div>
                         <div>
                             <p className="text-white font-medium">{selectedBarber.name}</p>
                             <p className="text-text-muted text-sm">{selectedBarber.role}</p>
@@ -114,6 +157,13 @@ export default function ConfirmPage() {
                         <ArrowRight className="w-4 h-4 text-text-muted" />
                     </div>
                 </Link>
+
+                {/* Error */}
+                {error && (
+                    <div className="bg-error/10 border border-error/30 rounded-xl p-3 text-error text-sm text-center">
+                        {error}
+                    </div>
+                )}
             </div>
 
             {/* Footer */}
@@ -128,13 +178,23 @@ export default function ConfirmPage() {
                     </div>
                     <p className="text-white text-2xl font-semibold">{total} ₽</p>
                 </div>
-                <Link
-                    href="/success"
-                    className="flex items-center justify-between w-full bg-white text-black py-4 px-6 rounded-2xl font-semibold active:scale-[0.98] transition-transform"
+                <button
+                    onClick={handleConfirm}
+                    disabled={isSubmitting}
+                    className="flex items-center justify-center gap-2 w-full bg-white text-black py-4 px-6 rounded-2xl font-semibold active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <span>Подтвердить</span>
-                    <ArrowRight className="w-5 h-5" />
-                </Link>
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>Бронирование...</span>
+                        </>
+                    ) : (
+                        <>
+                            <span>Подтвердить</span>
+                            <ArrowRight className="w-5 h-5" />
+                        </>
+                    )}
+                </button>
                 <p className="text-text-muted text-xs text-center mt-3">
                     Оплата на месте · Отмена за 2 часа бесплатно
                 </p>

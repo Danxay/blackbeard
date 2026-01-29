@@ -1,8 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Service } from '@/data/services';
-import { Barber } from '@/data/barbers';
-import { api } from '@/lib/api';
+import { Service, Barber, api } from '@/lib/api';
 
 interface BookingState {
     // Выбранные данные
@@ -11,7 +9,7 @@ interface BookingState {
     selectedDate: Date | null;
     selectedTime: string | null;
 
-    // Откуда начали флоу (для правильной навигации)
+    // Откуда начали флоу
     entryPoint: 'services' | 'barber' | 'home' | null;
 
     // Loading state
@@ -20,7 +18,7 @@ interface BookingState {
     // Actions
     setServices: (services: Service[]) => void;
     addService: (service: Service) => void;
-    removeService: (serviceId: string) => void;
+    removeService: (serviceId: number) => void;
     toggleService: (service: Service) => void;
 
     setBarber: (barber: Barber) => void;
@@ -37,15 +35,15 @@ interface BookingState {
 
     // Utils
     reset: () => void;
-    isServiceSelected: (serviceId: string) => boolean;
+    isServiceSelected: (serviceId: number) => boolean;
 }
 
 const initialState = {
-    selectedServices: [],
-    selectedBarber: null,
-    selectedDate: null,
-    selectedTime: null,
-    entryPoint: null,
+    selectedServices: [] as Service[],
+    selectedBarber: null as Barber | null,
+    selectedDate: null as Date | null,
+    selectedTime: null as string | null,
+    entryPoint: null as BookingState['entryPoint'],
     isSubmitting: false,
 };
 
@@ -102,7 +100,7 @@ export const useBookingStore = create<BookingState>()(
                 const state = get();
                 const user = getTelegramUser();
 
-                if (!state.selectedBarber || !state.selectedDate || !state.selectedTime) {
+                if (!state.selectedBarber || !state.selectedDate || !state.selectedTime || state.selectedServices.length === 0) {
                     return false;
                 }
 
@@ -112,11 +110,11 @@ export const useBookingStore = create<BookingState>()(
                     await api.createBooking({
                         telegram_id: user?.id || 0,
                         chat_id: getChatId(),
-                        first_name: user?.first_name || 'Guest',
+                        first_name: user?.first_name || 'Гость',
                         username: user?.username,
-                        barber_id: parseInt(state.selectedBarber.id),
-                        service_ids: state.selectedServices.map(s => parseInt(s.id)),
-                        date: state.selectedDate.toISOString(),
+                        barber_id: state.selectedBarber.id,
+                        service_ids: state.selectedServices.map(s => s.id),
+                        date: state.selectedDate.toISOString().split('T')[0],
                         time: state.selectedTime,
                         total_price: state.getTotalPrice(),
                         total_duration: state.getTotalDuration(),

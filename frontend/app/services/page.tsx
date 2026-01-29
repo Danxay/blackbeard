@@ -1,13 +1,26 @@
 "use client";
 import Header from "@/components/ui/Header";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import clsx from "clsx";
-import { Check, Clock, ArrowRight } from "lucide-react";
+import { Check, Clock, ArrowRight, Loader2, Scissors, Sparkles, Crown, Star, Droplets, Wind, Blend, Eraser } from "lucide-react";
 import Link from "next/link";
-import { services, Service, categoryLabels } from "@/data/services";
+import { useServices } from "@/hooks/useServices";
 import { useBookingStore } from "@/store/bookingStore";
+import { LucideIcon } from "lucide-react";
 
-const filters: { key: Service['category'] | 'all'; label: string }[] = [
+
+// Map icon names from backend to components
+const iconComponents: Record<string, LucideIcon> = {
+    Scissors, Sparkles, Crown, Star, Droplets, Wind, Blend, Eraser,
+};
+
+function getIconComponent(iconName: string): LucideIcon {
+    return iconComponents[iconName] || Scissors;
+}
+
+type CategoryFilter = string | 'all';
+
+const filters: { key: CategoryFilter; label: string }[] = [
     { key: 'all', label: 'Все' },
     { key: 'haircut', label: 'Стрижки' },
     { key: 'beard', label: 'Борода' },
@@ -15,6 +28,7 @@ const filters: { key: Service['category'] | 'all'; label: string }[] = [
 ];
 
 export default function ServicesPage() {
+    const { services, isLoading } = useServices();
     const {
         selectedServices,
         toggleService,
@@ -25,25 +39,34 @@ export default function ServicesPage() {
         selectedBarber
     } = useBookingStore();
 
-    const [activeFilter, setActiveFilter] = React.useState<Service['category'] | 'all'>('all');
+    const [activeFilter, setActiveFilter] = useState<CategoryFilter>('all');
 
     const filteredServices = useMemo(() => {
         if (activeFilter === 'all') return services;
         return services.filter(s => s.category === activeFilter);
-    }, [activeFilter]);
+    }, [activeFilter, services]);
 
     const total = getTotalPrice();
     const duration = getTotalDuration();
 
-    // Определяем следующий шаг: если барбер уже выбран — к дате, иначе — к барберу
     const nextStep = selectedBarber ? '/book/date' : '/book/barber';
 
-    // При первом рендере устанавливаем entry point
-    React.useEffect(() => {
+    useEffect(() => {
         if (!selectedBarber) {
             setEntryPoint('services');
         }
-    }, []);
+    }, [selectedBarber, setEntryPoint]);
+
+    if (isLoading) {
+        return (
+            <main className="min-h-screen bg-bg">
+                <Header title="Услуги" />
+                <div className="flex items-center justify-center h-[60vh]">
+                    <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="min-h-screen bg-bg">
@@ -73,7 +96,7 @@ export default function ServicesPage() {
             <div className="p-4 pb-40 space-y-2">
                 {filteredServices.map(service => {
                     const isSelected = isServiceSelected(service.id);
-                    const Icon = service.icon;
+                    const Icon = getIconComponent(service.icon);
 
                     return (
                         <div
@@ -167,5 +190,3 @@ export default function ServicesPage() {
         </main>
     );
 }
-
-import React from "react";

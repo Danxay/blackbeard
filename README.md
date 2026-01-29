@@ -2,39 +2,49 @@
 
 Приложение для записи в барбершоп через Telegram Mini App.
 
-## Структура проекта
+## 📁 Структура проекта
 
 ```
 blackbeard/
-├── frontend/       # Next.js 15 приложение
+├── frontend/       # Next.js 16 приложение
 ├── backend/        # FastAPI + SQLAlchemy
 ├── bot/            # Telegram бот на aiogram 3.x
 └── docker-compose.yml
 ```
 
-## Быстрый старт
+## 🚀 Быстрый старт
 
 ### 1. Настройка окружения
 
 ```bash
 cp .env.example .env
-# Заполните BOT_TOKEN и WEBAPP_URL
 ```
 
+Заполните переменные в `.env`:
+- `BOT_TOKEN` — токен от @BotFather
+- `WEBAPP_URL` — HTTPS URL вашего frontend (для ngrok/production)
+
 ### 2. Запуск для разработки
+
+**Backend:**
+```bash
+cd backend
+pip install -r requirements.txt
+
+# Первый запуск — заполнение базы тестовыми данными
+python seed.py
+
+# Запуск сервера
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8001
+```
+
+> ⚠️ `seed.py` создаёт начальные услуги и барберов в базе данных. Запускать только один раз при первом старте!
 
 **Frontend:**
 ```bash
 cd frontend
 npm install
 npm run dev
-```
-
-**Backend:**
-```bash
-cd backend
-pip install -r requirements.txt
-python -m uvicorn main:app --reload
 ```
 
 **Bot:**
@@ -50,26 +60,56 @@ python -m main
 docker-compose up --build
 ```
 
-## Настройка Telegram Bot
+База данных автоматически заполнится при первом запуске.
+
+---
+
+## 🤖 Настройка Telegram Bot
 
 1. Создайте бота через [@BotFather](https://t.me/BotFather)
 2. Получите токен и добавьте в `.env`
-3. Настройте Menu Button: `/setmenubutton` → выберите бота → введите HTTPS URL приложения
+3. Настройте Menu Button:
+   - Отправьте `/setmenubutton`
+   - Выберите вашего бота
+   - Введите HTTPS URL приложения
 
-## API Endpoints
+---
+
+## 📡 API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/services` | Список услуг |
+| GET | `/api/services/popular` | Популярные услуги |
 | GET | `/api/barbers` | Список барберов |
+| GET | `/api/barbers/{id}` | Информация о барбере |
 | POST | `/api/bookings` | Создать запись |
-| GET | `/api/bookings/user/{id}` | Записи пользователя |
+| GET | `/api/bookings/user/{telegram_id}` | Записи пользователя |
 | DELETE | `/api/bookings/{id}` | Отменить запись |
-| POST | `/api/auth/validate` | Валидация initData |
+| POST | `/api/auth/validate` | Валидация Telegram initData |
 
-## Технологии
+---
 
-- **Frontend:** Next.js 15, TypeScript, Tailwind CSS, Zustand
-- **Backend:** FastAPI, SQLAlchemy, SQLite
-- **Bot:** aiogram 3.x, Python 3.11+
-- **Deploy:** Docker, Docker Compose
+## 🔔 Уведомления
+
+При создании и отмене записи пользователю автоматически отправляется уведомление в Telegram бота.
+
+---
+
+## 🛠 Технологии
+
+| Компонент | Технологии |
+|-----------|------------|
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4, Zustand, SWR |
+| Backend | FastAPI, SQLAlchemy, SQLite (dev) / PostgreSQL (prod) |
+| Bot | aiogram 3.x, Python 3.11+ |
+| Deploy | Docker, Docker Compose |
+
+---
+
+## 📍 Локация
+
+Барбершоп Black Beard расположен в Санкт-Петербурге:
+- **Адрес:** Невский просп., 28
+- **Метро:** Гостиный двор
+- **Телефон:** +7 (812) 309-28-50

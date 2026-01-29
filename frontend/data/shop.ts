@@ -1,18 +1,18 @@
-// Информация о барбершопе
+// Информация о барбершопе — Санкт-Петербург
 export const shopInfo = {
     name: 'Black Beard',
     tagline: 'Премиум барбершоп',
 
     address: {
-        street: 'ул. Тверская, 15',
-        city: 'Москва',
-        metro: 'м. Пушкинская',
-        short: 'Тверская 15, Пушкинская',
-        full: 'Москва, ул. Тверская, 15 (м. Пушкинская)'
+        street: 'Невский просп., 28',
+        city: 'Санкт-Петербург',
+        metro: 'м. Гостиный двор',
+        short: 'Невский 28, Гостиный двор',
+        full: 'Санкт-Петербург, Невский просп., 28 (м. Гостиный двор)'
     },
 
-    phone: '+7 (495) 123-45-67',
-    phoneClean: '+74951234567',
+    phone: '+7 (812) 309-28-50',
+    phoneClean: '+78123092850',
 
     workHours: {
         weekdays: '10:00 - 22:00',
@@ -20,9 +20,9 @@ export const shopInfo = {
         sunday: '11:00 - 20:00'
     },
 
-    // Яндекс.Карты
-    mapsUrl: 'https://yandex.ru/maps/-/CDuOzK~V',
-    mapImage: 'https://static-maps.yandex.ru/1.x/?ll=37.606628,55.763969&z=16&l=map&size=450,300&pt=37.606628,55.763969,pm2rdm',
+    // Яндекс.Карты — Невский проспект
+    mapsUrl: 'https://yandex.ru/maps/-/CHAdnM~g',
+    mapImage: 'https://static-maps.yandex.ru/1.x/?ll=30.329899,59.935493&z=16&l=map&size=450,300&pt=30.329899,59.935493,pm2rdm',
 
     schedule: [
         { day: 'Понедельник', hours: '10:00 – 22:00', open: '10:00', close: '22:00', isToday: false },
@@ -35,9 +35,9 @@ export const shopInfo = {
     ],
 
     social: {
-        instagram: '@blackbeard_moscow',
-        telegram: '@blackbeard_bot',
-        vk: 'vk.com/blackbeard_moscow'
+        instagram: '@blackbeard_spb',
+        telegram: '@blackbeard_spb_bot',
+        vk: 'vk.com/blackbeard_spb'
     }
 };
 

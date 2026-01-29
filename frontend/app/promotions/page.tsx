@@ -32,7 +32,7 @@ export default function PromotionsPage() {
             await navigator.clipboard.writeText(code);
             setCopiedCode(code);
             setTimeout(() => setCopiedCode(null), 2000);
-        } catch (err) {
+        } catch {
             // Fallback для старых браузеров
             const textarea = document.createElement('textarea');
             textarea.value = code;
