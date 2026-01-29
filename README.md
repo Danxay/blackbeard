@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Black Beard — Telegram Mini App
 
-## Getting Started
+Приложение для записи в барбершоп через Telegram Mini App.
 
-First, run the development server:
+## Структура проекта
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+blackbeard/
+├── frontend/       # Next.js 15 приложение
+├── backend/        # FastAPI + SQLAlchemy
+├── bot/            # Telegram бот на aiogram 3.x
+└── docker-compose.yml
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Быстрый старт
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. Настройка окружения
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cp .env.example .env
+# Заполните BOT_TOKEN и WEBAPP_URL
+```
 
-## Learn More
+### 2. Запуск для разработки
 
-To learn more about Next.js, take a look at the following resources:
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Backend:**
+```bash
+cd backend
+pip install -r requirements.txt
+python -m uvicorn main:app --reload
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Bot:**
+```bash
+cd bot
+pip install -r requirements.txt
+python -m main
+```
 
-## Deploy on Vercel
+### 3. Запуск через Docker
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+docker-compose up --build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Настройка Telegram Bot
+
+1. Создайте бота через [@BotFather](https://t.me/BotFather)
+2. Получите токен и добавьте в `.env`
+3. Настройте Menu Button: `/setmenubutton` → выберите бота → введите HTTPS URL приложения
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/services` | Список услуг |
+| GET | `/api/barbers` | Список барберов |
+| POST | `/api/bookings` | Создать запись |
+| GET | `/api/bookings/user/{id}` | Записи пользователя |
+| DELETE | `/api/bookings/{id}` | Отменить запись |
+| POST | `/api/auth/validate` | Валидация initData |
+
+## Технологии
+
+- **Frontend:** Next.js 15, TypeScript, Tailwind CSS, Zustand
+- **Backend:** FastAPI, SQLAlchemy, SQLite
+- **Bot:** aiogram 3.x, Python 3.11+
+- **Deploy:** Docker, Docker Compose
