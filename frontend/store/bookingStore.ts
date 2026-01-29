@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Service } from '@/data/services';
 import { Barber } from '@/data/barbers';
+import { api } from '@/lib/api';
 
 interface BookingState {
     // Выбранные данные
@@ -12,6 +13,9 @@ interface BookingState {
 
     // Откуда начали флоу (для правильной навигации)
     entryPoint: 'services' | 'barber' | 'home' | null;
+
+    // Loading state
+    isSubmitting: boolean;
 
     // Actions
     setServices: (services: Service[]) => void;
@@ -28,6 +32,9 @@ interface BookingState {
     getTotalPrice: () => number;
     getTotalDuration: () => number;
 
+    // API
+    submitBooking: () => Promise<boolean>;
+
     // Utils
     reset: () => void;
     isServiceSelected: (serviceId: string) => boolean;
@@ -39,7 +46,20 @@ const initialState = {
     selectedDate: null,
     selectedTime: null,
     entryPoint: null,
+    isSubmitting: false,
 };
+
+// Get Telegram user data
+function getTelegramUser() {
+    if (typeof window === 'undefined') return null;
+    return window.Telegram?.WebApp?.initDataUnsafe?.user || null;
+}
+
+function getChatId() {
+    if (typeof window === 'undefined') return 0;
+    const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    return user?.id || 0;
+}
 
 export const useBookingStore = create<BookingState>()(
     persist(
@@ -78,6 +98,39 @@ export const useBookingStore = create<BookingState>()(
                 return get().selectedServices.reduce((sum, s) => sum + s.duration, 0);
             },
 
+            submitBooking: async () => {
+                const state = get();
+                const user = getTelegramUser();
+
+                if (!state.selectedBarber || !state.selectedDate || !state.selectedTime) {
+                    return false;
+                }
+
+                set({ isSubmitting: true });
+
+                try {
+                    await api.createBooking({
+                        telegram_id: user?.id || 0,
+                        chat_id: getChatId(),
+                        first_name: user?.first_name || 'Guest',
+                        username: user?.username,
+                        barber_id: parseInt(state.selectedBarber.id),
+                        service_ids: state.selectedServices.map(s => parseInt(s.id)),
+                        date: state.selectedDate.toISOString(),
+                        time: state.selectedTime,
+                        total_price: state.getTotalPrice(),
+                        total_duration: state.getTotalDuration(),
+                    });
+
+                    return true;
+                } catch (error) {
+                    console.error('Booking error:', error);
+                    return false;
+                } finally {
+                    set({ isSubmitting: false });
+                }
+            },
+
             reset: () => set(initialState),
 
             isServiceSelected: (serviceId) => {
@@ -86,7 +139,6 @@ export const useBookingStore = create<BookingState>()(
         }),
         {
             name: 'booking-storage',
-            // Не сохраняем entryPoint
             partialize: (state) => ({
                 selectedServices: state.selectedServices,
                 selectedBarber: state.selectedBarber,
