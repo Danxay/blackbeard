@@ -8,13 +8,15 @@ router = Router()
 SHOP_INFO = """
 <b>📍 Black Beard</b>
 
-Адрес: ул. Тверская, 15
-Метро: Пушкинская
+Адрес: Невский просп., 28
+Метро: Гостиный двор
 
 🕐 Часы работы:
 Пн-Пт: 10:00 — 22:00
 Сб: 10:00 — 21:00
 Вс: 11:00 — 20:00
+
+📞 +7 (812) 309-28-50
 """
 
 @router.callback_query(lambda c: c.data == "location")
@@ -27,7 +29,7 @@ async def show_location(callback: CallbackQuery):
 async def show_phone(callback: CallbackQuery):
     """Show phone number"""
     await callback.message.answer(
-        "📞 <b>Позвонить:</b>\n\n+7 (495) 123-45-67",
+        "📞 <b>Позвонить:</b>\n\n+7 (812) 309-28-50",
         parse_mode="HTML"
     )
     await callback.answer()
@@ -48,7 +50,7 @@ async def cancel_booking(callback: CallbackQuery):
                 )
             else:
                 await callback.answer("Не удалось отменить запись", show_alert=True)
-    except Exception as e:
+    except Exception:
         await callback.answer("Ошибка при отмене записи", show_alert=True)
 
 async def send_booking_confirmation(bot: Bot, chat_id: int, booking_data: dict):
@@ -61,7 +63,7 @@ async def send_booking_confirmation(bot: Bot, chat_id: int, booking_data: dict):
 👤 Мастер: {booking_data['barber']}
 💰 {booking_data['total_price']} ₽
 
-📍 ул. Тверская, 15 (м. Пушкинская)
+📍 Невский просп., 28 (м. Гостиный двор)
 
 Ждём вас в Black Beard!
 """
@@ -78,7 +80,7 @@ async def send_reminder(bot: Bot, chat_id: int, booking_data: dict):
 💇 {booking_data['services']}
 👤 Мастер: {booking_data['barber']}
 
-📍 ул. Тверская, 15 (м. Пушкинская)
+📍 Невский просп., 28 (м. Гостиный двор)
 
 До встречи! 👋
 """
