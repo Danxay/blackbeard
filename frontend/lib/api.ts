@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Remove trailing slash from API_URL
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
 // Types matching backend schemas
 export interface Service {
@@ -48,11 +50,13 @@ export interface BookingCreate {
     total_duration: number;
 }
 
-// Fetcher for SWR
+// Fetcher for SWR with error handling
 export const fetcher = async <T>(url: string): Promise<T> => {
-    const res = await fetch(`${API_URL}${url}`);
+    const fullUrl = `${API_URL}${url}`;
+    const res = await fetch(fullUrl);
     if (!res.ok) {
-        throw new Error(`API Error: ${res.status}`);
+        const error = new Error(`API Error: ${res.status}`);
+        throw error;
     }
     return res.json();
 };
@@ -69,12 +73,21 @@ export const api = {
 
     // Bookings
     createBooking: async (data: BookingCreate): Promise<Booking> => {
-        const res = await fetch(`${API_URL}/api/bookings`, {
+        const url = `${API_URL}/api/bookings`;
+        console.log('Creating booking:', { url, data });
+
+        const res = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
-        if (!res.ok) throw new Error(`Booking failed: ${res.status}`);
+
+        if (!res.ok) {
+            const errorBody = await res.text();
+            console.error('Booking error response:', { status: res.status, body: errorBody });
+            throw new Error(`Ошибка ${res.status}: ${errorBody}`);
+        }
+
         return res.json();
     },
 
@@ -85,7 +98,10 @@ export const api = {
         const res = await fetch(`${API_URL}/api/bookings/${bookingId}`, {
             method: 'DELETE',
         });
-        if (!res.ok) throw new Error(`Cancel failed: ${res.status}`);
+        if (!res.ok) {
+            const errorBody = await res.text();
+            throw new Error(`Ошибка отмены ${res.status}: ${errorBody}`);
+        }
     },
 
     // Auth

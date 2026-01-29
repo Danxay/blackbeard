@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
+import Providers from "@/components/Providers";
 import "./globals.css";
 
 const inter = Inter({
@@ -11,7 +12,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Black Beard",
-  description: "Премиум барбершоп в Москве",
+  description: "Премиум барбершоп в Санкт-Петербурге",
 };
 
 export default function RootLayout({
@@ -30,7 +31,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} antialiased`}>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -51,7 +51,7 @@ export function useTelegram() {
     const webApp = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     const isInitializedRef = useRef(false);
 
-    // Initialize WebApp once (using ref to avoid lint warning about setState in effect)
+    // Initialize WebApp once
     useEffect(() => {
         if (webApp && !isInitializedRef.current) {
             isInitializedRef.current = true;
