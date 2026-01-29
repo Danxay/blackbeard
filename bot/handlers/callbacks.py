@@ -1,7 +1,7 @@
 from aiogram import Router, Bot
 from aiogram.types import CallbackQuery
 import httpx
-from ..config import API_URL
+from config import API_URL
 
 router = Router()
 

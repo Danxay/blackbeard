@@ -1,5 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
-from .config import WEBAPP_URL
+from config import WEBAPP_URL
 
 def get_main_keyboard() -> InlineKeyboardMarkup:
     """Main keyboard with WebApp button"""
