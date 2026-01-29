@@ -62,7 +62,7 @@ class BookingCreate(BaseModel):
     username: Optional[str] = None
     barber_id: int
     service_ids: List[int]
-    date: datetime
+    date: str  # Format: YYYY-MM-DD
     time: str
     total_price: int
     total_duration: int
