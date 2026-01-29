@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 import httpx
-from ..database import get_db
-from ..models import Booking, User, Service, BookingStatus
-from ..schemas import BookingCreate, BookingResponse
-from ..config import BOT_TOKEN
+from database import get_db
+from models import Booking, User, Service, BookingStatus
+from schemas import BookingCreate, BookingResponse
+from config import BOT_TOKEN
 
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
 

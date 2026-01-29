@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
-from .models import BookingStatus
+from models import BookingStatus
 
 # User schemas
 class UserBase(BaseModel):

@@ -1,5 +1,5 @@
-from .database import SessionLocal
-from .models import Barber, Service
+from database import SessionLocal
+from models import Barber, Service
 
 def seed_database():
     """Seed database with initial data"""
