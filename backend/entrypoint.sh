@@ -1,7 +1,4 @@
 #!/bin/sh
 
-# Run seed only if database doesn't exist
-python seed.py
-
-# Start server
+# Start server (seed runs via lifespan in main.py)
 exec uvicorn main:app --host 0.0.0.0 --port 8000
