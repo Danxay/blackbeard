@@ -1,0 +1,15 @@
+{
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/book/barber/page": "app/book/barber/page.js",
+  "/book/confirm/page": "app/book/confirm/page.js",
+  "/bookings/page": "app/bookings/page.js",
+  "/book/date/page": "app/book/date/page.js",
+  "/location/page": "app/location/page.js",
+  "/notifications/page": "app/notifications/page.js",
+  "/promotions/page": "app/promotions/page.js",
+  "/page": "app/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/services/page": "app/services/page.js",
+  "/success/page": "app/success/page.js"
+}
