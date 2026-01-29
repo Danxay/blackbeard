@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from ..schemas import TelegramAuthData
-from ..utils.telegram import validate_init_data
+from schemas import TelegramAuthData
+from utils.telegram import validate_init_data
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 

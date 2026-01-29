@@ -1,7 +1,7 @@
 import hashlib
 import hmac
 from urllib.parse import parse_qs
-from ..config import BOT_TOKEN
+from config import BOT_TOKEN
 
 def validate_init_data(init_data: str) -> dict | None:
     """
