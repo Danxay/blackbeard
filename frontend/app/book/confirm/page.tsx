@@ -61,11 +61,13 @@ export default function ConfirmPage() {
             router.push('/success');
         } catch (err) {
             console.error('Booking error:', err);
-            setError('Не удалось создать запись. Попробуйте ещё раз.');
+            const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
+            setError(`Не удалось создать запись: ${errorMessage}`);
         } finally {
             setIsSubmitting(false);
         }
     };
+
 
     if (!selectedBarber || selectedServices.length === 0) {
         return null;
