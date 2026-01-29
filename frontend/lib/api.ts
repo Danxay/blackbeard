@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 // Types matching backend schemas
 export interface Service {
@@ -62,11 +62,11 @@ export const api = {
     // Services
     getServices: () => fetcher<Service[]>('/api/services'),
     getPopularServices: () => fetcher<Service[]>('/api/services/popular'),
-    
+
     // Barbers
     getBarbers: () => fetcher<Barber[]>('/api/barbers'),
     getBarber: (id: number) => fetcher<Barber>(`/api/barbers/${id}`),
-    
+
     // Bookings
     createBooking: async (data: BookingCreate): Promise<Booking> => {
         const res = await fetch(`${API_URL}/api/bookings`, {
@@ -77,17 +77,17 @@ export const api = {
         if (!res.ok) throw new Error(`Booking failed: ${res.status}`);
         return res.json();
     },
-    
-    getUserBookings: (telegramId: number) => 
+
+    getUserBookings: (telegramId: number) =>
         fetcher<Booking[]>(`/api/bookings/user/${telegramId}`),
-    
+
     cancelBooking: async (bookingId: number): Promise<void> => {
         const res = await fetch(`${API_URL}/api/bookings/${bookingId}`, {
             method: 'DELETE',
         });
         if (!res.ok) throw new Error(`Cancel failed: ${res.status}`);
     },
-    
+
     // Auth
     validateInitData: async (initData: string) => {
         const res = await fetch(`${API_URL}/api/auth/validate`, {
