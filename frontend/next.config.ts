@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Standalone output for Docker
-  output: 'standalone',
+  // For Telegram Mini Apps
 
   // For Telegram Mini Apps
   async headers() {
