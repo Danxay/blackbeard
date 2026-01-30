@@ -50,10 +50,22 @@ export interface BookingCreate {
     total_duration: number;
 }
 
+// Helper to get auth headers
+const getAuthHeaders = (): Record<string, string> => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp?.initData) {
+        return {
+            'Authorization': `tma ${window.Telegram.WebApp.initData}`
+        };
+    }
+    return {};
+};
+
 // Fetcher for SWR with error handling
 export const fetcher = async <T>(url: string): Promise<T> => {
     const fullUrl = `${API_URL}${url}`;
-    const res = await fetch(fullUrl);
+    const headers = getAuthHeaders();
+
+    const res = await fetch(fullUrl, { headers });
     if (!res.ok) {
         const error = new Error(`API Error: ${res.status}`);
         throw error;
@@ -76,9 +88,14 @@ export const api = {
         const url = `${API_URL}/api/bookings`;
         console.log('Creating booking:', { url, data });
 
+        const headers = {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+        };
+
         const res = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify(data),
         });
 
@@ -91,12 +108,14 @@ export const api = {
         return res.json();
     },
 
-    getUserBookings: (telegramId: number) =>
-        fetcher<Booking[]>(`/api/bookings/user/${telegramId}`),
+    getUserBookings: () =>
+        fetcher<Booking[]>('/api/bookings'),
 
     cancelBooking: async (bookingId: number): Promise<void> => {
+        const headers = getAuthHeaders();
         const res = await fetch(`${API_URL}/api/bookings/${bookingId}`, {
             method: 'DELETE',
+            headers: headers,
         });
         if (!res.ok) {
             const errorBody = await res.text();

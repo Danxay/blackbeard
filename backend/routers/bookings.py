@@ -7,6 +7,7 @@ from database import get_db
 from models import Booking, User, Service, BookingStatus
 from schemas import BookingCreate, BookingResponse
 from config import BOT_TOKEN
+from dependencies import get_current_user
 
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
 
@@ -28,9 +29,16 @@ async def send_telegram_notification(chat_id: int, text: str):
             print(f"Failed to send notification: {e}")
 
 @router.post("", response_model=BookingResponse)
-async def create_booking(booking_data: BookingCreate, db: Session = Depends(get_db)):
+async def create_booking(
+    booking_data: BookingCreate,
+    db: Session = Depends(get_db),
+    user_data: dict = Depends(get_current_user)
+):
     """Create a new booking"""
     
+    # Authenticated user ID
+    telegram_id = user_data['id']
+
     # Parse date string to datetime
     try:
         booking_date = dt.strptime(booking_data.date, "%Y-%m-%d")
@@ -38,13 +46,15 @@ async def create_booking(booking_data: BookingCreate, db: Session = Depends(get_
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
     
     # Get or create user
-    user = db.query(User).filter(User.telegram_id == booking_data.telegram_id).first()
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
     if not user:
+        # User not found, create new one using authenticated data
         user = User(
-            telegram_id=booking_data.telegram_id,
-            chat_id=booking_data.chat_id,
-            first_name=booking_data.first_name,
-            username=booking_data.username
+            telegram_id=telegram_id,
+            chat_id=telegram_id, # Assume chat_id is same as telegram_id for users
+            first_name=user_data.get('first_name', booking_data.first_name),
+            last_name=user_data.get('last_name'),
+            username=user_data.get('username', booking_data.username)
         )
         db.add(user)
         db.commit()
@@ -86,9 +96,13 @@ async def create_booking(booking_data: BookingCreate, db: Session = Depends(get_
     
     return booking
 
-@router.get("/user/{telegram_id}", response_model=List[BookingResponse])
-def get_user_bookings(telegram_id: int, db: Session = Depends(get_db)):
-    """Get all bookings for a user"""
+@router.get("", response_model=List[BookingResponse])
+def get_my_bookings(
+    db: Session = Depends(get_db),
+    user_data: dict = Depends(get_current_user)
+):
+    """Get all bookings for the authenticated user"""
+    telegram_id = user_data['id']
     user = db.query(User).filter(User.telegram_id == telegram_id).first()
     if not user:
         return []
@@ -99,18 +113,32 @@ def get_user_bookings(telegram_id: int, db: Session = Depends(get_db)):
     ).order_by(Booking.date.desc()).all()
 
 @router.delete("/{booking_id}")
-async def cancel_booking(booking_id: int, db: Session = Depends(get_db)):
+async def cancel_booking(
+    booking_id: int,
+    db: Session = Depends(get_db),
+    user_data: dict = Depends(get_current_user)
+):
     """Cancel a booking"""
+    telegram_id = user_data['id']
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+
+    # Find booking
     booking = db.query(Booking).filter(Booking.id == booking_id).first()
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     
+    # Check ownership
+    if not user or booking.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to cancel this booking")
+
     booking.status = BookingStatus.CANCELLED
     db.commit()
     
     # Send cancellation notification
+    chat_id = user.chat_id if user else booking.user.chat_id
+
     await send_telegram_notification(
-        booking.user.chat_id,
+        chat_id,
         f"❌ <b>Запись отменена</b>\n\n"
         f"Запись на {booking.date.strftime('%d.%m.%Y')} в {booking.time} была отменена."
     )

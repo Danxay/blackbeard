@@ -5,11 +5,13 @@ import { Booking, fetcher, api } from '@/lib/api';
 import { useTelegram } from './useTelegram';
 
 export function useBookings() {
-    const { user } = useTelegram();
-    const telegramId = user?.id;
+    const { user, isReady } = useTelegram();
+
+    // Use /api/bookings as key, but only if user exists and app is ready
+    const shouldFetch = isReady && user;
 
     const { data, error, isLoading, mutate } = useSWR<Booking[]>(
-        telegramId ? `/api/bookings/user/${telegramId}` : null,
+        shouldFetch ? '/api/bookings' : null,
         (url) => fetcher<Booking[]>(url),
         {
             revalidateOnFocus: true,
