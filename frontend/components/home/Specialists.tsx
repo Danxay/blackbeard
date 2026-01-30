@@ -56,7 +56,7 @@ export default function Specialists() {
                             <Image
                                 alt={barber.name}
                                 className="object-cover transition-transform duration-300 group-active:scale-105"
-                                src={barber.image}
+                                src={barber.image || '/placeholder.svg'}
                                 fill
                                 sizes="112px"
                             />

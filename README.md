@@ -22,7 +22,7 @@ cp .env.example .env
 
 # 2. Укажите BOT_TOKEN и WEBAPP_URL в .env
 #    (для продакшена также задайте NEXT_PUBLIC_API_URL и FRONTEND_URL)
-#    API_URL для docker-compose не нужен — там используется http://backend:8000
+#    API_URL для docker-compose не нужен — там используется внутренний адрес backend:${API_PORT:-8000}
 
 # 3. Запуск
 docker-compose up --build
@@ -88,6 +88,9 @@ API_PORT=8000
 
 # БД
 DATABASE_URL=sqlite:///./data/blackbeard.db
+
+# Seed demo data (отключить на проде)
+SEED_DATA=true
 ```
 
 ## 🤖 Настройка Telegram Bot

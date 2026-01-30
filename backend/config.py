@@ -19,3 +19,6 @@ API_PORT = int(os.getenv("API_PORT", "8000"))
 
 # CORS
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+# Seed data (disable for production)
+SEED_DATA = os.getenv("SEED_DATA", "true").lower() in {"1", "true", "yes"}

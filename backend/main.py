@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from database import engine, Base
-from config import FRONTEND_URL, API_HOST, API_PORT
+from config import FRONTEND_URL, API_HOST, API_PORT, SEED_DATA
 from routers import services_router, barbers_router, bookings_router, auth_router
 # Import models to register them with Base.metadata
 import models  # noqa: F401
@@ -12,7 +12,8 @@ from seed import seed_database
 async def lifespan(app: FastAPI):
     # Startup: create tables and seed data
     Base.metadata.create_all(bind=engine)
-    seed_database()
+    if SEED_DATA:
+        seed_database()
     yield
     # Shutdown
     pass

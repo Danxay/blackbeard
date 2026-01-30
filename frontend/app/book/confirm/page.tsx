@@ -91,7 +91,7 @@ export default function ConfirmPage() {
                     <div className="flex items-center gap-3">
                         <div className="relative w-12 h-12 flex-shrink-0">
                             <Image
-                                src={selectedBarber.image || '/placeholder.jpg'}
+                                src={selectedBarber.image || '/placeholder.svg'}
                                 alt={selectedBarber.name}
                                 fill
                                 className="object-cover rounded-xl"

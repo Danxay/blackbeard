@@ -11,6 +11,8 @@ def validate_init_data(init_data: str) -> dict | None:
     Returns parsed data if valid, None otherwise.
     """
     try:
+        if not BOT_TOKEN:
+            return None
         # Use parse_qsl with keep_blank_values=True for robust parsing
         parsed_list = parse_qsl(init_data, keep_blank_values=True)
         parsed_dict = dict(parsed_list)
@@ -41,7 +43,7 @@ def validate_init_data(init_data: str) -> dict | None:
             hashlib.sha256
         ).hexdigest()
         
-        if calculated_hash != received_hash:
+        if not hmac.compare_digest(calculated_hash, received_hash):
             return None
         
         # Check auth_date (prevent replay attacks)

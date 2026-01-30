@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from typing import List
 from datetime import datetime as dt
 import httpx
+import hmac
 from database import get_db
-from models import Booking, User, Service, BookingStatus
+from models import Booking, User, Service, Barber, BookingStatus
 from schemas import BookingCreate, BookingResponse
 from config import BOT_TOKEN
 from dependencies import get_current_user
+from fastapi import Header
 
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
 
@@ -60,6 +62,13 @@ async def create_booking(
         db.commit()
         db.refresh(user)
     
+    # Validate barber
+    barber = db.query(Barber).filter(Barber.id == booking_data.barber_id).first()
+    if not barber:
+        raise HTTPException(status_code=400, detail="Barber not found")
+    if not barber.is_available:
+        raise HTTPException(status_code=400, detail="Barber is not available")
+
     # Get services
     services = db.query(Service).filter(Service.id.in_(booking_data.service_ids)).all()
     if not services:
@@ -107,10 +116,13 @@ def get_my_bookings(
     if not user:
         return []
     
-    return db.query(Booking).filter(
-        Booking.user_id == user.id,
-        Booking.status != BookingStatus.CANCELLED
-    ).order_by(Booking.date.desc()).all()
+    return (
+        db.query(Booking)
+        .options(selectinload(Booking.barber), selectinload(Booking.services))
+        .filter(Booking.user_id == user.id)
+        .order_by(Booking.date.desc())
+        .all()
+    )
 
 @router.delete("/{booking_id}")
 async def cancel_booking(
@@ -143,4 +155,32 @@ async def cancel_booking(
         f"Запись на {booking.date.strftime('%d.%m.%Y')} в {booking.time} была отменена."
     )
     
+    return {"status": "cancelled"}
+
+@router.delete("/{booking_id}/bot")
+async def cancel_booking_by_bot(
+    booking_id: int,
+    db: Session = Depends(get_db),
+    x_bot_token: str | None = Header(default=None, alias="X-Bot-Token"),
+):
+    """Cancel a booking via bot (server-to-server)"""
+    if not BOT_TOKEN or not x_bot_token or not hmac.compare_digest(x_bot_token, BOT_TOKEN):
+        raise HTTPException(status_code=401, detail="Invalid bot token")
+
+    booking = db.query(Booking).filter(Booking.id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    booking.status = BookingStatus.CANCELLED
+    db.commit()
+
+    user = booking.user or db.query(User).filter(User.id == booking.user_id).first()
+    chat_id = user.chat_id if user else None
+    if chat_id:
+        await send_telegram_notification(
+            chat_id,
+            f"❌ <b>Запись отменена</b>\n\n"
+            f"Запись на {booking.date.strftime('%d.%m.%Y')} в {booking.time} была отменена."
+        )
+
     return {"status": "cancelled"}

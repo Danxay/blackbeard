@@ -86,7 +86,6 @@ export const api = {
     // Bookings
     createBooking: async (data: BookingCreate): Promise<Booking> => {
         const url = `${API_URL}/api/bookings`;
-        console.log('Creating booking:', { url, data });
 
         const headers = {
             'Content-Type': 'application/json',

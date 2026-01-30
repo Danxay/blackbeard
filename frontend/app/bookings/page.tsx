@@ -8,20 +8,31 @@ import Link from "next/link";
 import { useBookings } from "@/hooks/useBookings";
 
 export default function BookingsPage() {
-    const { bookings, isLoading, cancelBooking } = useBookings();
+    const { bookings, isLoading, isError, cancelBooking } = useBookings();
     const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
     const [isCancelling, setIsCancelling] = useState(false);
 
+    const getBookingDateTime = (dateStr: string, timeStr: string) => {
+        const date = new Date(dateStr);
+        if (timeStr) {
+            const [h, m] = timeStr.split(':').map((val) => parseInt(val, 10));
+            if (!Number.isNaN(h) && !Number.isNaN(m)) {
+                date.setHours(h, m, 0, 0);
+            }
+        }
+        return date;
+    };
+
     // Разделяем на предстоящие и историю
     const now = new Date();
     const upcomingBookings = bookings.filter(b => {
-        const bookingDate = new Date(b.date);
+        const bookingDate = getBookingDateTime(b.date, b.time);
         return bookingDate >= now && b.status !== 'cancelled';
     });
     const historyBookings = bookings.filter(b => {
-        const bookingDate = new Date(b.date);
+        const bookingDate = getBookingDateTime(b.date, b.time);
         return bookingDate < now || b.status === 'cancelled';
     });
 
@@ -103,6 +114,15 @@ export default function BookingsPage() {
             </div>
 
             <div className="p-4 space-y-4">
+                {isError && (
+                    <div className="text-center py-6 bg-bg-card rounded-2xl border border-border">
+                        <AlertCircle className="w-6 h-6 text-error mx-auto mb-2" />
+                        <p className="text-white text-sm font-medium">Не удалось загрузить записи</p>
+                        <p className="text-text-secondary text-xs mt-1">
+                            Откройте приложение внутри Telegram и попробуйте снова
+                        </p>
+                    </div>
+                )}
                 {activeTab === 'upcoming' && (
                     <>
                         {upcomingBookings.length === 0 ? (
@@ -146,14 +166,14 @@ export default function BookingsPage() {
                                         <div className="p-4">
                                             <div className="flex items-center gap-3">
                                                 <img
-                                                    src={booking.barber.image || '/placeholder.jpg'}
-                                                    alt={booking.barber.name}
+                                                    src={booking.barber?.image || '/placeholder.svg'}
+                                                    alt={booking.barber?.name || 'Барбер'}
                                                     className="w-12 h-12 rounded-xl object-cover"
                                                 />
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-white font-medium truncate">{booking.barber.name}</p>
+                                                    <p className="text-white font-medium truncate">{booking.barber?.name || 'Барбер'}</p>
                                                     <p className="text-text-secondary text-sm truncate">
-                                                        {booking.services.map(s => s.name).join(', ')}
+                                                        {booking.services?.map(s => s.name).join(', ') || ''}
                                                     </p>
                                                     <p className="text-text-muted text-xs flex items-center gap-1 mt-1">
                                                         <Clock className="w-3 h-3" />
@@ -202,9 +222,9 @@ export default function BookingsPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-white font-medium truncate">
-                                                {booking.services.map(s => s.name).join(', ')}
+                                                {booking.services?.map(s => s.name).join(', ') || ''}
                                             </p>
-                                            <p className="text-text-muted text-sm">{booking.barber.name}</p>
+                                            <p className="text-text-muted text-sm">{booking.barber?.name || 'Барбер'}</p>
                                         </div>
                                         <Link href="/services" className="text-accent text-sm font-medium">
                                             Повторить

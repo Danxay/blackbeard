@@ -63,7 +63,7 @@ export default function SelectBarber() {
                             {/* Avatar */}
                             <div className="relative w-14 h-14 flex-shrink-0">
                                 <Image
-                                    src={barber.image || '/placeholder.jpg'}
+                                    src={barber.image || '/placeholder.svg'}
                                     alt={barber.name}
                                     fill
                                     className="object-cover rounded-xl"

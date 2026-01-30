@@ -1,7 +1,7 @@
 from aiogram import Router, Bot
 from aiogram.types import CallbackQuery
 import httpx
-from config import API_URL
+from config import API_URL, BOT_TOKEN
 
 router = Router()
 
@@ -41,13 +41,15 @@ async def cancel_booking(callback: CallbackQuery):
     
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.delete(f"{API_URL}/api/bookings/{booking_id}")
+            headers = {"X-Bot-Token": BOT_TOKEN} if BOT_TOKEN else {}
+            response = await client.delete(f"{API_URL}/api/bookings/{booking_id}/bot", headers=headers)
             
             if response.status_code == 200:
                 await callback.message.edit_text(
                     "❌ Запись отменена",
                     reply_markup=None
                 )
+                await callback.answer("Запись отменена")
             else:
                 await callback.answer("Не удалось отменить запись", show_alert=True)
     except Exception:

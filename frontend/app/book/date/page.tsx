@@ -97,7 +97,7 @@ export default function DatePage() {
                     <div className="flex items-center gap-3 p-3 bg-bg-card rounded-xl border border-border">
                         <div className="relative w-10 h-10 flex-shrink-0">
                             <Image
-                                src={selectedBarber.image || '/placeholder.jpg'}
+                                src={selectedBarber.image || '/placeholder.svg'}
                                 alt={selectedBarber.name}
                                 fill
                                 className="object-cover rounded-lg"

@@ -3,11 +3,34 @@
 import { Gift, Bell, MapPin, ChevronRight, Phone, User } from 'lucide-react';
 import Link from 'next/link';
 import { useTelegram } from '@/hooks/useTelegram';
+import { useBookings } from '@/hooks/useBookings';
 import BottomNav from '@/components/ui/BottomNav';
 import { shopInfo } from '@/data/shop';
 
 export default function Profile() {
   const { user, isMounted } = useTelegram();
+  const { bookings } = useBookings();
+
+  const getBookingDateTime = (dateStr: string, timeStr: string) => {
+    const date = new Date(dateStr);
+    if (timeStr) {
+      const [h, m] = timeStr.split(':').map((val) => parseInt(val, 10));
+      if (!Number.isNaN(h) && !Number.isNaN(m)) {
+        date.setHours(h, m, 0, 0);
+      }
+    }
+    return date;
+  };
+
+  const now = new Date();
+  const upcomingCount = bookings.filter((b) => {
+    const bookingDate = getBookingDateTime(b.date, b.time);
+    return bookingDate >= now && b.status !== 'cancelled';
+  }).length;
+  const historyCount = bookings.filter((b) => {
+    const bookingDate = getBookingDateTime(b.date, b.time);
+    return bookingDate < now || b.status === 'cancelled';
+  }).length;
 
   const menuItems = [
     { icon: Gift, label: 'Акции', href: '/promotions', color: 'text-accent' },
@@ -59,16 +82,16 @@ export default function Profile() {
       <div className="px-4 pb-6">
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-bg-card p-4 rounded-2xl border border-border text-center">
-            <p className="text-2xl font-semibold text-white">12</p>
-            <p className="text-text-muted text-xs mt-1">Визитов</p>
+            <p className="text-2xl font-semibold text-white">{bookings.length}</p>
+            <p className="text-text-muted text-xs mt-1">Записей</p>
           </div>
           <div className="bg-bg-card p-4 rounded-2xl border border-border text-center">
-            <p className="text-2xl font-semibold text-white">500</p>
-            <p className="text-text-muted text-xs mt-1">Бонусов</p>
+            <p className="text-2xl font-semibold text-white">{upcomingCount}</p>
+            <p className="text-text-muted text-xs mt-1">Предстоящих</p>
           </div>
           <div className="bg-bg-card p-4 rounded-2xl border border-border text-center">
-            <p className="text-2xl font-semibold text-white">4.9</p>
-            <p className="text-text-muted text-xs mt-1">Рейтинг</p>
+            <p className="text-2xl font-semibold text-white">{historyCount}</p>
+            <p className="text-text-muted text-xs mt-1">История</p>
           </div>
         </div>
       </div>

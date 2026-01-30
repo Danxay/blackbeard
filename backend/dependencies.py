@@ -16,7 +16,7 @@ async def get_current_user(authorization: Annotated[str | None, Header()] = None
     init_data = authorization[4:] # Strip "tma "
 
     result = validate_init_data(init_data)
-    if not result:
+    if not result or not result.get("user"):
         raise HTTPException(status_code=401, detail="Invalid initData")
 
     return result['user']

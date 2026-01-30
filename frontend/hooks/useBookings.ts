@@ -5,10 +5,10 @@ import { Booking, fetcher, api } from '@/lib/api';
 import { useTelegram } from './useTelegram';
 
 export function useBookings() {
-    const { user, isReady } = useTelegram();
+    const { isReady, initData } = useTelegram();
 
-    // Use /api/bookings as key, but only if user exists and app is ready
-    const shouldFetch = isReady && user;
+    // Use /api/bookings as key, but only if initData is available
+    const shouldFetch = isReady && !!initData;
 
     const { data, error, isLoading, mutate } = useSWR<Booking[]>(
         shouldFetch ? '/api/bookings' : null,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface TelegramUser {
     id: number;
@@ -16,6 +16,7 @@ interface TelegramWebApp {
     close: () => void;
     setHeaderColor: (color: string) => void;
     setBackgroundColor: (color: string) => void;
+    initData?: string;
     initDataUnsafe?: {
         user?: TelegramUser;
     };
@@ -29,27 +30,36 @@ declare global {
     }
 }
 
-// Server snapshot always returns null
-function getServerSnapshot(): TelegramWebApp | null {
-    return null;
-}
-
-// Client snapshot returns the actual WebApp
-function getSnapshot(): TelegramWebApp | null {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-        return window.Telegram.WebApp;
-    }
-    return null;
-}
-
-// Subscribe function (no-op since Telegram WebApp doesn't change)
-function subscribe(): () => void {
-    return () => { };
-}
-
 export function useTelegram() {
-    const webApp = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+    const [webApp, setWebApp] = useState<TelegramWebApp | null>(null);
     const isInitializedRef = useRef(false);
+
+    // Ensure WebApp is available even if injected after hydration
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const tryAttach = () => {
+            const tg = window.Telegram?.WebApp ?? null;
+            if (tg) {
+                setWebApp(tg);
+                return true;
+            }
+            return false;
+        };
+
+        if (tryAttach()) return;
+
+        let attempts = 0;
+        const maxAttempts = 50;
+        const interval = setInterval(() => {
+            attempts += 1;
+            if (tryAttach() || attempts >= maxAttempts) {
+                clearInterval(interval);
+            }
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, []);
 
     // Initialize WebApp once
     useEffect(() => {
@@ -78,10 +88,12 @@ export function useTelegram() {
     };
 
     const user = webApp?.initDataUnsafe?.user || null;
+    const initData = webApp?.initData || '';
 
     return {
         tg: webApp,
         user,
+        initData,
         onClose,
         isReady: !!webApp,
         isMounted: typeof window !== 'undefined'
