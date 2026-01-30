@@ -23,6 +23,7 @@ export default function BottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
+                            aria-current={isActive ? 'page' : undefined}
                             className={clsx(
                                 "flex flex-col items-center justify-center w-20 h-full transition-all",
                                 isActive ? "text-white" : "text-text-muted hover:text-text-secondary"
