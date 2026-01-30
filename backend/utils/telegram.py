@@ -1,8 +1,9 @@
 import hashlib
 import hmac
 import time
-from urllib.parse import parse_qs
+from urllib.parse import parse_qsl
 from config import BOT_TOKEN
+import json
 
 def validate_init_data(init_data: str) -> dict | None:
     """
@@ -10,18 +11,20 @@ def validate_init_data(init_data: str) -> dict | None:
     Returns parsed data if valid, None otherwise.
     """
     try:
-        parsed = parse_qs(init_data)
+        # Use parse_qsl with keep_blank_values=True for robust parsing
+        parsed_list = parse_qsl(init_data, keep_blank_values=True)
+        parsed_dict = dict(parsed_list)
         
         # Extract hash
-        received_hash = parsed.get('hash', [''])[0]
+        received_hash = parsed_dict.get('hash')
         if not received_hash:
             return None
         
         # Build data-check-string (sorted, excluding hash)
         data_check_arr = []
-        for key, value in sorted(parsed.items()):
+        for key, value in sorted(parsed_dict.items()):
             if key != 'hash':
-                data_check_arr.append(f"{key}={value[0]}")
+                data_check_arr.append(f"{key}={value}")
         data_check_string = '\n'.join(data_check_arr)
         
         # Calculate secret key: HMAC_SHA256(bot_token, "WebAppData")
@@ -42,7 +45,8 @@ def validate_init_data(init_data: str) -> dict | None:
             return None
         
         # Check auth_date (prevent replay attacks)
-        auth_date = int(parsed.get('auth_date', ['0'])[0])
+        auth_date_str = parsed_dict.get('auth_date', '0')
+        auth_date = int(auth_date_str)
         if auth_date == 0:
             return None
 
@@ -52,14 +56,13 @@ def validate_init_data(init_data: str) -> dict | None:
             return None
 
         # Parse user data
-        import json
-        user_data = parsed.get('user', ['{}'])[0]
+        user_data = parsed_dict.get('user', '{}')
         user = json.loads(user_data)
         
         return {
             'user': user,
-            'auth_date': int(parsed.get('auth_date', ['0'])[0]),
-            'query_id': parsed.get('query_id', [None])[0]
+            'auth_date': auth_date,
+            'query_id': parsed_dict.get('query_id')
         }
     except Exception as e:
         print(f"Validation error: {e}")
