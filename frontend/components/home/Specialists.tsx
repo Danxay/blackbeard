@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useBookingStore } from '@/store/bookingStore';
@@ -52,10 +53,12 @@ export default function Specialists() {
                         className="flex-shrink-0 w-28 group"
                     >
                         <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-bg-card mb-2">
-                            <img
+                            <Image
                                 alt={barber.name}
-                                className="w-full h-full object-cover transition-transform duration-300 group-active:scale-105"
+                                className="object-cover transition-transform duration-300 group-active:scale-105"
                                 src={barber.image}
+                                fill
+                                sizes="112px"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
