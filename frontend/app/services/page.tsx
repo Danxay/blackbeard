@@ -99,11 +99,14 @@ export default function ServicesPage() {
                     const Icon = getIconComponent(service.icon);
 
                     return (
-                        <div
+                        <button
                             key={service.id}
+                            type="button"
+                            role="checkbox"
+                            aria-checked={isSelected}
                             onClick={() => toggleService(service)}
                             className={clsx(
-                                "flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all active:scale-[0.99]",
+                                "flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all active:scale-[0.99] w-full text-left focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none",
                                 isSelected
                                     ? "bg-white/5 border-white/30"
                                     : "bg-bg-card border-border"
@@ -147,7 +150,7 @@ export default function ServicesPage() {
                             )}>
                                 {isSelected && <Check className="w-4 h-4 text-black" strokeWidth={3} />}
                             </div>
-                        </div>
+                        </button>
                     );
                 })}
             </div>
