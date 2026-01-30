@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import time
 from urllib.parse import parse_qs
 from config import BOT_TOKEN
 
@@ -40,6 +41,16 @@ def validate_init_data(init_data: str) -> dict | None:
         if calculated_hash != received_hash:
             return None
         
+        # Check auth_date (prevent replay attacks)
+        auth_date = int(parsed.get('auth_date', ['0'])[0])
+        if auth_date == 0:
+            return None
+
+        current_time = int(time.time())
+        # Allow 24 hours (86400 seconds) validity
+        if current_time - auth_date > 86400:
+            return None
+
         # Parse user data
         import json
         user_data = parsed.get('user', ['{}'])[0]
