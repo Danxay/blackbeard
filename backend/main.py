@@ -24,13 +24,23 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS
+# CORS - настройки для Telegram Mini App
+# При allow_credentials=True нельзя использовать wildcard "*"
+cors_origins = [
+    FRONTEND_URL,
+    "https://blackbeard.danxay.ru",
+    "https://blackbeardapi.danxay.ru",
+    "http://localhost:3000",
+    "http://localhost:5173",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:3000", "*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Routers
