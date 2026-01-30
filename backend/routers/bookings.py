@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime as dt
 import httpx
 from database import get_db
 from models import Booking, User, Service, BookingStatus
@@ -30,6 +31,12 @@ async def send_telegram_notification(chat_id: int, text: str):
 async def create_booking(booking_data: BookingCreate, db: Session = Depends(get_db)):
     """Create a new booking"""
     
+    # Parse date string to datetime
+    try:
+        booking_date = dt.strptime(booking_data.date, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    
     # Get or create user
     user = db.query(User).filter(User.telegram_id == booking_data.telegram_id).first()
     if not user:
@@ -52,7 +59,7 @@ async def create_booking(booking_data: BookingCreate, db: Session = Depends(get_
     booking = Booking(
         user_id=user.id,
         barber_id=booking_data.barber_id,
-        date=booking_data.date,
+        date=booking_date,
         time=booking_data.time,
         total_price=booking_data.total_price,
         total_duration=booking_data.total_duration,
