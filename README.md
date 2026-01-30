@@ -21,6 +21,8 @@ blackbeard/
 cp .env.example .env
 
 # 2. Укажите BOT_TOKEN и WEBAPP_URL в .env
+#    (для продакшена также задайте NEXT_PUBLIC_API_URL и FRONTEND_URL)
+#    API_URL для docker-compose не нужен — там используется http://backend:8000
 
 # 3. Запуск
 docker-compose up --build
@@ -29,6 +31,8 @@ docker-compose up --build
 База данных и тестовые данные создадутся автоматически.
 
 ### Локальная разработка
+
+Все сервисы читают `.env` из корня репозитория (ничего копировать в `backend/` или `bot/` не нужно).
 
 **Backend:**
 ```bash
@@ -54,14 +58,33 @@ python -m main
 
 ## ⚙️ Конфигурация (.env)
 
+Скопируйте `.env.example` → `.env` и заполните минимум:
+
 ```ini
-# Telegram
+# Обязательные
 BOT_TOKEN=             # Токен от @BotFather
 WEBAPP_URL=            # HTTPS URL приложения
+```
 
-# Порты (измените если заняты)
+Остальные переменные с дефолтами для локалки и docker-compose:
+
+```ini
+# Frontend -> API
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# CORS для API
+FRONTEND_URL=http://localhost:3000
+
+# Bot -> API (нужно для локального запуска бота)
+API_URL=http://localhost:8000
+
+# Порты (хостовые порты docker-compose)
 FRONTEND_PORT=3000
 BACKEND_PORT=8000
+
+# Backend host/port (если запускать `python main.py`)
+API_HOST=0.0.0.0
+API_PORT=8000
 
 # БД
 DATABASE_URL=sqlite:///./data/blackbeard.db
