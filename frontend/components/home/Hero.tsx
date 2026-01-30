@@ -2,6 +2,7 @@
 
 import { MapPin } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { shopInfo } from "@/data/shop";
 
 export default function Hero() {
@@ -9,10 +10,13 @@ export default function Hero() {
         <header className="relative w-full h-[50vh] min-h-[400px] overflow-hidden">
             {/* Background Image */}
             <div className="absolute inset-0">
-                <img
+                <Image
                     alt="Barbershop"
-                    className="w-full h-full object-cover"
-                    src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=800&q=80"
+                    className="object-cover"
+                    src="https://images.unsplash.com/photo-1621605815971-fbc98d665033"
+                    fill
+                    priority
+                    sizes="100vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/60 to-transparent" />
             </div>
