@@ -41,6 +41,13 @@ export default function ConfirmPage() {
             return;
         }
 
+        const formatLocalDate = (date: Date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
         setIsSubmitting(true);
         setError(null);
 
@@ -52,7 +59,7 @@ export default function ConfirmPage() {
                 username: user.username,
                 barber_id: selectedBarber.id,
                 service_ids: selectedServices.map(s => s.id),
-                date: selectedDate.toISOString().split('T')[0],
+                date: formatLocalDate(selectedDate),
                 time: selectedTime,
                 total_price: total,
                 total_duration: duration

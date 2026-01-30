@@ -9,7 +9,11 @@ export default function NotificationsPage() {
     // Генерируем уведомления из реальных записей
     const notifications = bookings.flatMap(booking => {
         const items = [];
-        const bookingDate = new Date(booking.date);
+        const datePart = booking.date.split('T')[0];
+        const [year, month, day] = datePart.split('-').map((val) => parseInt(val, 10));
+        const bookingDate = Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)
+            ? new Date(year, month - 1, day)
+            : new Date(booking.date);
         const createdDate = new Date(booking.created_at);
 
         // Уведомление о создании записи

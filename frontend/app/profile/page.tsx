@@ -12,12 +12,18 @@ export default function Profile() {
   const { bookings } = useBookings();
 
   const getBookingDateTime = (dateStr: string, timeStr: string) => {
-    const date = new Date(dateStr);
+    const datePart = dateStr.split('T')[0];
+    const [year, month, day] = datePart.split('-').map((val) => parseInt(val, 10));
+    const date = Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)
+      ? new Date(year, month - 1, day)
+      : new Date(dateStr);
     if (timeStr) {
       const [h, m] = timeStr.split(':').map((val) => parseInt(val, 10));
       if (!Number.isNaN(h) && !Number.isNaN(m)) {
         date.setHours(h, m, 0, 0);
       }
+    } else {
+      date.setHours(23, 59, 59, 999);
     }
     return date;
   };

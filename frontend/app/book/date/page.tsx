@@ -37,6 +37,7 @@ export default function DatePage() {
     const {
         selectedBarber,
         selectedServices,
+        selectedDate,
         selectedTime,
         setDate,
         setTime,
@@ -52,6 +53,21 @@ export default function DatePage() {
     }, [days]);
 
     const [selectedDayIndex, setSelectedDayIndex] = useState(firstAvailableIndex >= 0 ? firstAvailableIndex : 0);
+
+    useEffect(() => {
+        if (!selectedDate) return;
+        const matchIndex = days.findIndex((d) => {
+            const dDate = d.fullDate;
+            return (
+                dDate.getFullYear() === selectedDate.getFullYear() &&
+                dDate.getMonth() === selectedDate.getMonth() &&
+                dDate.getDate() === selectedDate.getDate()
+            );
+        });
+        if (matchIndex >= 0 && !days[matchIndex].disabled) {
+            setSelectedDayIndex(matchIndex);
+        }
+    }, [selectedDate, days]);
 
     const total = getTotalPrice();
     const duration = getTotalDuration();
@@ -94,23 +110,42 @@ export default function DatePage() {
             <div className="p-4 pb-48 space-y-6">
                 {/* Selected info */}
                 {selectedBarber && (
-                    <div className="flex items-center gap-3 p-3 bg-bg-card rounded-xl border border-border">
-                        <div className="relative w-10 h-10 flex-shrink-0">
-                            <Image
-                                src={selectedBarber.image || '/placeholder.svg'}
-                                alt={selectedBarber.name}
-                                fill
-                                className="object-cover rounded-lg"
-                                unoptimized
-                            />
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-3 p-3 bg-bg-card rounded-xl border border-border">
+                            <div className="relative w-10 h-10 flex-shrink-0">
+                                <Image
+                                    src={selectedBarber.image || '/placeholder.svg'}
+                                    alt={selectedBarber.name}
+                                    fill
+                                    className="object-cover rounded-lg"
+                                    unoptimized
+                                />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-medium truncate">{selectedBarber.name}</p>
+                                <p className="text-text-muted text-xs">
+                                    {selectedServices.length} услуг · {duration} мин
+                                </p>
+                            </div>
+                            <p className="text-white font-semibold">{total} ₽</p>
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm font-medium truncate">{selectedBarber.name}</p>
-                            <p className="text-text-muted text-xs">
-                                {selectedServices.length} услуг · {duration} мин
-                            </p>
+                        <div className="flex items-center gap-3 text-xs">
+                            <button
+                                type="button"
+                                onClick={() => router.push('/book/barber')}
+                                className="text-text-secondary hover:text-white transition-colors"
+                            >
+                                Сменить мастера
+                            </button>
+                            <span className="text-text-muted">•</span>
+                            <button
+                                type="button"
+                                onClick={() => router.push('/services')}
+                                className="text-text-secondary hover:text-white transition-colors"
+                            >
+                                Изменить услуги
+                            </button>
                         </div>
-                        <p className="text-white font-semibold">{total} ₽</p>
                     </div>
                 )}
 

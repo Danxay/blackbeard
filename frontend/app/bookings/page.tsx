@@ -6,23 +6,76 @@ import clsx from "clsx";
 import { Calendar, Plus, AlertCircle, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useBookings } from "@/hooks/useBookings";
+import { useBookingStore } from "@/store/bookingStore";
+import { useRouter } from "next/navigation";
 
 export default function BookingsPage() {
     const { bookings, isLoading, isError, cancelBooking } = useBookings();
+    const { reset, setBarber, setServices, setEntryPoint, setDate, setTime } = useBookingStore();
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
     const [isCancelling, setIsCancelling] = useState(false);
 
     const getBookingDateTime = (dateStr: string, timeStr: string) => {
-        const date = new Date(dateStr);
+        const datePart = dateStr.split('T')[0];
+        const [year, month, day] = datePart.split('-').map((val) => parseInt(val, 10));
+        const date = Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)
+            ? new Date(year, month - 1, day)
+            : new Date(dateStr);
         if (timeStr) {
             const [h, m] = timeStr.split(':').map((val) => parseInt(val, 10));
             if (!Number.isNaN(h) && !Number.isNaN(m)) {
                 date.setHours(h, m, 0, 0);
             }
+        } else {
+            // If time is missing, treat booking as end-of-day to avoid false "history"
+            date.setHours(23, 59, 59, 999);
         }
         return date;
+    };
+
+    const getBookingDateOnly = (dateStr: string) => {
+        const datePart = dateStr.split('T')[0];
+        const [year, month, day] = datePart.split('-').map((val) => parseInt(val, 10));
+        if (Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)) {
+            return new Date(year, month - 1, day);
+        }
+        return new Date(dateStr);
+    };
+
+    const handleReschedule = (booking: typeof bookings[number]) => {
+        reset();
+        if (booking.services?.length) {
+            setServices(booking.services);
+        }
+        if (booking.barber) {
+            setBarber(booking.barber);
+        }
+        if (booking.date) {
+            setDate(getBookingDateOnly(booking.date));
+        }
+        if (booking.time) {
+            setTime(booking.time);
+        }
+        setEntryPoint('barber');
+        router.push('/book/date');
+    };
+
+    const handleRepeat = (booking: typeof bookings[number]) => {
+        reset();
+        if (booking.services?.length) {
+            setServices(booking.services);
+        }
+        if (booking.barber) {
+            setBarber(booking.barber);
+            setEntryPoint('barber');
+            router.push('/book/date');
+        } else {
+            setEntryPoint('services');
+            router.push('/book/barber');
+        }
     };
 
     // Разделяем на предстоящие и историю
@@ -53,7 +106,7 @@ export default function BookingsPage() {
     };
 
     const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
+        const date = getBookingDateOnly(dateStr);
         return {
             weekday: date.toLocaleDateString('ru-RU', { weekday: 'long' }),
             dayMonth: date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }),
@@ -192,9 +245,12 @@ export default function BookingsPage() {
                                             >
                                                 Отменить
                                             </button>
-                                            <Link href="/book/date" className="flex-1 py-4 text-white text-sm font-medium text-center active:bg-white/5">
+                                            <button
+                                                onClick={() => handleReschedule(booking)}
+                                                className="flex-1 py-4 text-white text-sm font-medium text-center active:bg-white/5"
+                                            >
                                                 Перенести
-                                            </Link>
+                                            </button>
                                         </div>
                                     </div>
                                 );
@@ -226,9 +282,12 @@ export default function BookingsPage() {
                                             </p>
                                             <p className="text-text-muted text-sm">{booking.barber?.name || 'Барбер'}</p>
                                         </div>
-                                        <Link href="/services" className="text-accent text-sm font-medium">
+                                        <button
+                                            onClick={() => handleRepeat(booking)}
+                                            className="text-accent text-sm font-medium"
+                                        >
                                             Повторить
-                                        </Link>
+                                        </button>
                                     </div>
                                 );
                             })
