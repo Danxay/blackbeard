@@ -32,6 +32,9 @@ cors_origins = [
     "https://blackbeardapi.danxay.ru",
     "http://localhost:3000",
     "http://localhost:5173",
+    # Telegram domains
+    "https://web.telegram.org",
+    "https://telegram.org",
 ]
 
 app.add_middleware(

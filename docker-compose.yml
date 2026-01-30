@@ -3,7 +3,7 @@ services:
     build:
       context: ./frontend
       args:
-        - API_URL=${API_URL:-http://localhost:8000}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
@@ -17,6 +17,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/blackbeard.db}
       - BOT_TOKEN=${BOT_TOKEN}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -30,3 +31,4 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
