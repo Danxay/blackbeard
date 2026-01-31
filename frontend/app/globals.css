@@ -90,6 +90,7 @@ body {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -101,6 +102,7 @@ body {
     opacity: 0;
     transform: translateY(16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -112,6 +114,7 @@ body {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -122,15 +125,19 @@ body {
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
 }
 
 @keyframes pulse-soft {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }
@@ -153,21 +160,50 @@ body {
 }
 
 /* Staggered animations - используй с nth-child */
-.stagger > * {
+.stagger>* {
   opacity: 0;
   animation: fade-in 0.4s ease-out forwards;
 }
 
-.stagger > *:nth-child(1) { animation-delay: 0ms; }
-.stagger > *:nth-child(2) { animation-delay: 50ms; }
-.stagger > *:nth-child(3) { animation-delay: 100ms; }
-.stagger > *:nth-child(4) { animation-delay: 150ms; }
-.stagger > *:nth-child(5) { animation-delay: 200ms; }
-.stagger > *:nth-child(6) { animation-delay: 250ms; }
-.stagger > *:nth-child(7) { animation-delay: 300ms; }
-.stagger > *:nth-child(8) { animation-delay: 350ms; }
-.stagger > *:nth-child(9) { animation-delay: 400ms; }
-.stagger > *:nth-child(10) { animation-delay: 450ms; }
+.stagger>*:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.stagger>*:nth-child(2) {
+  animation-delay: 50ms;
+}
+
+.stagger>*:nth-child(3) {
+  animation-delay: 100ms;
+}
+
+.stagger>*:nth-child(4) {
+  animation-delay: 150ms;
+}
+
+.stagger>*:nth-child(5) {
+  animation-delay: 200ms;
+}
+
+.stagger>*:nth-child(6) {
+  animation-delay: 250ms;
+}
+
+.stagger>*:nth-child(7) {
+  animation-delay: 300ms;
+}
+
+.stagger>*:nth-child(8) {
+  animation-delay: 350ms;
+}
+
+.stagger>*:nth-child(9) {
+  animation-delay: 400ms;
+}
+
+.stagger>*:nth-child(10) {
+  animation-delay: 450ms;
+}
 
 /* Skeleton loading */
 .skeleton {
@@ -196,9 +232,14 @@ body {
 }
 
 @layer utilities {
+
   /* Safe area padding */
   .safe-bottom {
-    padding-bottom: max(24px, calc(var(--safe-area-inset-bottom) + 8px));
+    padding-bottom: max(12px, calc(var(--safe-area-inset-bottom) + 4px));
+  }
+
+  .mb-safe {
+    margin-bottom: max(12px, var(--safe-area-inset-bottom));
   }
 
   .safe-top {
