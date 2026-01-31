@@ -3,10 +3,11 @@ import Header from "@/components/ui/Header";
 import Image from "next/image";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import clsx from "clsx";
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useBookingStore } from "@/store/bookingStore";
 import { useRouter } from "next/navigation";
+import { api, SlotAvailability } from "@/lib/api";
 
 function generateDays() {
     const days = [];
@@ -25,15 +26,22 @@ function generateDays() {
             month: date.toLocaleDateString('ru', { month: 'short' }),
             fullDate: date,
             disabled: isWeekend,
-            isToday: i === 0
+            isToday: i === 0,
+            dateString: date.toISOString().split('T')[0] // YYYY-MM-DD for API
         });
     }
     return days;
 }
 
-const allTimeSlots = ["10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+// All available 30-min slots
+const ALL_TIME_SLOTS = [
+    "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
+    "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+    "17:00", "17:30", "18:00", "18:30", "19:00", "19:30",
+    "20:00", "20:30", "21:00"
+];
 
-// Проверяем, прошло ли время для выбранной даты
+// Check if time slot has passed for today
 function isTimeSlotPast(timeSlot: string, isToday: boolean): boolean {
     if (!isToday) return false;
 
@@ -42,7 +50,7 @@ function isTimeSlotPast(timeSlot: string, isToday: boolean): boolean {
     const slotTime = new Date();
     slotTime.setHours(hours, minutes, 0, 0);
 
-    // Добавляем буфер в 30 минут (нельзя записаться за 30 минут до времени)
+    // 30-min buffer
     const bufferMs = 30 * 60 * 1000;
     return now.getTime() + bufferMs > slotTime.getTime();
 }
@@ -63,30 +71,63 @@ export default function DatePage() {
 
     const days = useMemo(() => generateDays(), []);
 
-    // Находим первый доступный день (не воскресенье)
     const firstAvailableIndex = useMemo(() => {
         return days.findIndex(d => !d.disabled);
     }, [days]);
 
     const [selectedDayIndex, setSelectedDayIndex] = useState(firstAvailableIndex >= 0 ? firstAvailableIndex : 0);
+    const [slotAvailability, setSlotAvailability] = useState<SlotAvailability[]>([]);
+    const [isLoadingSlots, setIsLoadingSlots] = useState(false);
 
-    // Определяем, сегодня ли выбранный день
     const isSelectedDayToday = days[selectedDayIndex]?.isToday ?? false;
 
-    // Фильтруем доступные слоты для выбранного дня
-    const availableTimeSlots = useMemo(() => {
-        return allTimeSlots.map(slot => ({
-            time: slot,
-            disabled: isTimeSlotPast(slot, isSelectedDayToday)
-        }));
-    }, [isSelectedDayToday]);
-
-    // Сбрасываем выбранное время, если оно стало недоступно
+    // Fetch availability when barber or date changes
     useEffect(() => {
-        if (selectedTime && isTimeSlotPast(selectedTime, isSelectedDayToday)) {
-            setTime(null as unknown as string);
+        if (!selectedBarber?.id || !days[selectedDayIndex]) return;
+
+        const fetchAvailability = async () => {
+            setIsLoadingSlots(true);
+            try {
+                const dateStr = days[selectedDayIndex].dateString;
+                const data = await api.getBarberAvailability(selectedBarber.id, dateStr);
+                setSlotAvailability(data.slots);
+            } catch (error) {
+                console.error('Failed to fetch availability:', error);
+                // Fallback to all slots available
+                setSlotAvailability(ALL_TIME_SLOTS.map(time => ({ time, available: true })));
+            } finally {
+                setIsLoadingSlots(false);
+            }
+        };
+
+        fetchAvailability();
+    }, [selectedBarber?.id, selectedDayIndex, days]);
+
+    // Combine API availability with past-time check
+    const availableTimeSlots = useMemo(() => {
+        if (slotAvailability.length === 0) {
+            // Before API loads, use default slots
+            return ALL_TIME_SLOTS.map(slot => ({
+                time: slot,
+                disabled: isTimeSlotPast(slot, isSelectedDayToday)
+            }));
         }
-    }, [selectedDayIndex, isSelectedDayToday, selectedTime, setTime]);
+
+        return slotAvailability.map(slot => ({
+            time: slot.time,
+            disabled: !slot.available || isTimeSlotPast(slot.time, isSelectedDayToday)
+        }));
+    }, [slotAvailability, isSelectedDayToday]);
+
+    // Reset time when switching days
+    useEffect(() => {
+        if (selectedTime) {
+            const currentSlot = availableTimeSlots.find(s => s.time === selectedTime);
+            if (currentSlot?.disabled) {
+                setTime(null as unknown as string);
+            }
+        }
+    }, [selectedDayIndex, availableTimeSlots, selectedTime, setTime]);
 
     useEffect(() => {
         if (!selectedDate) return;
@@ -106,14 +147,12 @@ export default function DatePage() {
     const total = getTotalPrice();
     const duration = getTotalDuration();
 
-    // Устанавливаем дату по умолчанию при загрузке
     useEffect(() => {
         if (days[selectedDayIndex] && !days[selectedDayIndex].disabled) {
             setDate(days[selectedDayIndex].fullDate);
         }
     }, [days, selectedDayIndex, setDate]);
 
-    // Редирект если нет данных
     useEffect(() => {
         if (!hasHydrated) return;
         if (!selectedBarber || selectedServices.length === 0) {
@@ -125,7 +164,6 @@ export default function DatePage() {
         if (!days[index].disabled) {
             setSelectedDayIndex(index);
             setDate(days[index].fullDate);
-            // Сбрасываем время при смене дня
             setTime(null as unknown as string);
         }
     }, [days, setDate, setTime]);
@@ -133,15 +171,12 @@ export default function DatePage() {
     const handleTimeSelect = useCallback((time: string, disabled: boolean) => {
         if (disabled) return;
         setTime(time);
-        // Убеждаемся что дата установлена
         if (!days[selectedDayIndex].disabled) {
             setDate(days[selectedDayIndex].fullDate);
         }
     }, [days, selectedDayIndex, setDate, setTime]);
 
     const canProceed = selectedTime !== null;
-
-    // Проверяем, есть ли вообще доступные слоты на сегодня
     const hasAvailableSlots = availableTimeSlots.some(slot => !slot.disabled);
 
     return (
@@ -229,8 +264,11 @@ export default function DatePage() {
                 <div>
                     <div className="flex items-center justify-between mb-3">
                         <p className="text-text-secondary text-sm">Выберите время</p>
-                        {isSelectedDayToday && !hasAvailableSlots && (
-                            <p className="text-warning text-xs">Доступных слотов нет</p>
+                        {isLoadingSlots && (
+                            <Loader2 className="w-4 h-4 animate-spin text-text-muted" />
+                        )}
+                        {!isLoadingSlots && isSelectedDayToday && !hasAvailableSlots && (
+                            <p className="text-warning text-xs">Нет свободных слотов</p>
                         )}
                     </div>
                     <div className="grid grid-cols-4 gap-2">
@@ -238,14 +276,14 @@ export default function DatePage() {
                             <button
                                 key={time}
                                 onClick={() => handleTimeSelect(time, disabled)}
-                                disabled={disabled}
+                                disabled={disabled || isLoadingSlots}
                                 className={clsx(
                                     "py-3 rounded-xl text-sm font-medium transition-all",
-                                    disabled && "opacity-40 cursor-not-allowed",
+                                    (disabled || isLoadingSlots) && "opacity-40 cursor-not-allowed",
                                     selectedTime === time
                                         ? "bg-white text-black"
                                         : disabled
-                                            ? "bg-bg-card border border-border text-text-muted"
+                                            ? "bg-bg-card border border-border text-text-muted line-through"
                                             : "bg-bg-card border border-border text-white touch-feedback"
                                 )}
                             >

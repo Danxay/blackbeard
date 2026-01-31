@@ -1,5 +1,7 @@
 from database import SessionLocal
-from models import Barber, Service
+from models import Barber, Service, User, Booking, BookingStatus
+from datetime import datetime, timedelta
+import random
 
 def seed_database():
     """Seed database with initial data"""
@@ -148,11 +150,89 @@ def seed_database():
             }
         ]
         
+        barbers = []
         for b in barbers_data:
-            db.add(Barber(**b))
+            barber = Barber(**b)
+            db.add(barber)
+            barbers.append(barber)
+        
+        db.commit()  # Commit to get barber IDs
+        
+        # Create demo user for fake bookings
+        demo_user = User(
+            telegram_id=123456789,
+            chat_id=123456789,
+            first_name="Demo",
+            last_name="User",
+            username="demo_user"
+        )
+        db.add(demo_user)
+        db.commit()
+        
+        # Get services for bookings
+        services = db.query(Service).all()
+        
+        # Create demo bookings for the next 7 days
+        # This makes the calendar look realistic with some occupied slots
+        demo_bookings = []
+        
+        # Available time slots (30-min intervals)
+        time_slots = [
+            "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
+            "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+            "17:00", "17:30", "18:00", "18:30", "19:00", "19:30",
+            "20:00", "20:30", "21:00"
+        ]
+        
+        # For each barber, create 2-4 bookings per day for next 7 days
+        for day_offset in range(7):
+            target_date = datetime.now() + timedelta(days=day_offset)
+            
+            for barber in barbers[:4]:  # Only available barbers
+                # Random number of bookings per barber per day (2-4)
+                num_bookings = random.randint(2, 4)
+                
+                # Pick random non-overlapping time slots
+                used_slot_indices = set()
+                
+                for _ in range(num_bookings):
+                    # Pick a random service
+                    service = random.choice(services)
+                    duration = service.duration
+                    
+                    # Calculate how many 30-min slots this service needs
+                    slots_needed = (duration + 29) // 30
+                    
+                    # Find a starting slot that doesn't overlap
+                    attempts = 0
+                    while attempts < 20:
+                        start_idx = random.randint(0, len(time_slots) - slots_needed)
+                        
+                        # Check if these slots are free
+                        slot_indices = set(range(start_idx, start_idx + slots_needed))
+                        if not slot_indices & used_slot_indices:
+                            # Mark slots as used
+                            used_slot_indices |= slot_indices
+                            
+                            # Create booking
+                            booking = Booking(
+                                user_id=demo_user.id,
+                                barber_id=barber.id,
+                                date=target_date,
+                                time=time_slots[start_idx],
+                                status=BookingStatus.CONFIRMED,
+                                total_price=service.price,
+                                total_duration=duration,
+                                reminder_sent=True  # Don't send reminders for demo
+                            )
+                            db.add(booking)
+                            demo_bookings.append(booking)
+                            break
+                        
+                        attempts += 1
         
         db.commit()
-        print("Database seeded successfully!")
+        print(f"Database seeded successfully! Created {len(demo_bookings)} demo bookings.")
         
     except Exception as e:
         print(f"Error seeding database: {e}")

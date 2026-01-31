@@ -16,7 +16,7 @@ SHOP_INFO = """
 Сб: 10:00 — 21:00
 Вс: 11:00 — 20:00
 
-📞 +7 (812) 309-28-50
+📞 <a href="tel:+78123092850">+7 (812) 309-28-50</a>
 """
 
 @router.callback_query(lambda c: c.data == "location")
@@ -29,7 +29,7 @@ async def show_location(callback: CallbackQuery):
 async def show_phone(callback: CallbackQuery):
     """Show phone number"""
     await callback.message.answer(
-        "📞 <b>Позвонить:</b>\n\n+7 (812) 309-28-50",
+        "📞 <b>Позвонить:</b>\n\n<a href=\"tel:+78123092850\">+7 (812) 309-28-50</a>",
         parse_mode="HTML"
     )
     await callback.answer()
@@ -66,6 +66,7 @@ async def send_booking_confirmation(bot: Bot, chat_id: int, booking_data: dict):
 💰 {booking_data['total_price']} ₽
 
 📍 Невский просп., 28 (м. Гостиный двор)
+📞 <a href="tel:+78123092850">+7 (812) 309-28-50</a>
 
 Ждём вас в Black Beard!
 """
@@ -83,6 +84,7 @@ async def send_reminder(bot: Bot, chat_id: int, booking_data: dict):
 👤 Мастер: {booking_data['barber']}
 
 📍 Невский просп., 28 (м. Гостиный двор)
+📞 <a href="tel:+78123092850">+7 (812) 309-28-50</a>
 
 До встречи! 👋
 """

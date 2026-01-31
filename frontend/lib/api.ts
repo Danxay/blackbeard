@@ -50,6 +50,19 @@ export interface BookingCreate {
     total_duration: number;
 }
 
+export interface SlotAvailability {
+    time: string;
+    available: boolean;
+}
+
+export interface BarberAvailability {
+    barber_id: number;
+    date: string;
+    slots: SlotAvailability[];
+    occupied_count: number;
+    available_count: number;
+}
+
 // Helper to get auth headers
 const getAuthHeaders = (): Record<string, string> => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp?.initData) {
@@ -82,6 +95,8 @@ export const api = {
     // Barbers
     getBarbers: () => fetcher<Barber[]>('/api/barbers'),
     getBarber: (id: number) => fetcher<Barber>(`/api/barbers/${id}`),
+    getBarberAvailability: (barberId: number, date: string) =>
+        fetcher<BarberAvailability>(`/api/barbers/${barberId}/availability?date=${date}`),
 
     // Bookings
     createBooking: async (data: BookingCreate): Promise<Booking> => {
