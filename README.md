@@ -96,6 +96,7 @@ SEED_DATA=true
 REMINDER_ENABLED=true
 REMINDER_MINUTES=60
 REMINDER_POLL_SECONDS=60
+APP_TIMEZONE=Europe/Moscow
 ```
 
 ## 🤖 Настройка Telegram Bot

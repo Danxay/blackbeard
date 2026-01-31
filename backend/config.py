@@ -27,3 +27,4 @@ SEED_DATA = os.getenv("SEED_DATA", "true").lower() in {"1", "true", "yes"}
 REMINDER_ENABLED = os.getenv("REMINDER_ENABLED", "true").lower() in {"1", "true", "yes"}
 REMINDER_MINUTES = int(os.getenv("REMINDER_MINUTES", "60"))
 REMINDER_POLL_SECONDS = int(os.getenv("REMINDER_POLL_SECONDS", "60"))
+APP_TIMEZONE = os.getenv("APP_TIMEZONE", "Europe/Moscow")

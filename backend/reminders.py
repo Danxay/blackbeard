@@ -1,21 +1,25 @@
 import asyncio
+import logging
 from datetime import datetime, timedelta, time as dtime
+from zoneinfo import ZoneInfo
 from sqlalchemy import or_
 from sqlalchemy.orm import selectinload
 from database import SessionLocal
 from models import Booking, BookingStatus
 from routers.bookings import send_telegram_notification
-from config import BOT_TOKEN, REMINDER_ENABLED, REMINDER_MINUTES, REMINDER_POLL_SECONDS
+from config import BOT_TOKEN, REMINDER_ENABLED, REMINDER_MINUTES, REMINDER_POLL_SECONDS, APP_TIMEZONE
 
 
-def _booking_datetime(booking: Booking) -> datetime | None:
+logger = logging.getLogger("reminders")
+
+def _booking_datetime(booking: Booking, tz: ZoneInfo) -> datetime | None:
     try:
         date_value = booking.date
         if isinstance(date_value, datetime):
             date_value = date_value.date()
         time_str = booking.time or "00:00"
         hours, minutes = time_str.split(":")[:2]
-        return datetime.combine(date_value, dtime(int(hours), int(minutes)))
+        return datetime.combine(date_value, dtime(int(hours), int(minutes)), tzinfo=tz)
     except Exception:
         return None
 
@@ -24,7 +28,8 @@ async def check_and_send_reminders() -> None:
     if not BOT_TOKEN or not REMINDER_ENABLED:
         return
 
-    now = datetime.now()
+    tz = ZoneInfo(APP_TIMEZONE)
+    now = datetime.now(tz)
     window_end = now + timedelta(minutes=REMINDER_MINUTES)
 
     db = SessionLocal()
@@ -40,7 +45,7 @@ async def check_and_send_reminders() -> None:
         )
 
         for booking in bookings:
-            booking_dt = _booking_datetime(booking)
+            booking_dt = _booking_datetime(booking, tz)
             if not booking_dt:
                 continue
             if now <= booking_dt <= window_end:
@@ -57,6 +62,8 @@ async def check_and_send_reminders() -> None:
                     ),
                 )
                 booking.reminder_sent = True
+                logger.info("Reminder sent for booking %s at %s", booking.id, booking_dt.isoformat())
+                logger.info("Reminder sent for booking %s", booking.id)
 
         db.commit()
     finally:
@@ -68,8 +75,7 @@ async def reminder_worker(stop_event: asyncio.Event) -> None:
         try:
             await check_and_send_reminders()
         except Exception:
-            # Do not crash the loop on errors
-            pass
+            logger.exception("Reminder worker error")
 
         try:
             await asyncio.wait_for(stop_event.wait(), timeout=REMINDER_POLL_SECONDS)

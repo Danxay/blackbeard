@@ -1,5 +1,5 @@
 "use client";
-import { Check, Calendar, Clock, Home } from "lucide-react";
+import { Check, Calendar, Clock, Home, Tag } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useBookingStore } from "@/store/bookingStore";
@@ -13,12 +13,17 @@ export default function SuccessPage() {
         selectedDate,
         selectedTime,
         getTotalPrice,
+        getFinalPrice,
         getTotalDuration,
+        promoCode,
+        promoDiscount,
         reset
     } = useBookingStore();
 
-    const total = getTotalPrice();
+    const originalPrice = getTotalPrice();
+    const finalPrice = getFinalPrice();
     const duration = getTotalDuration();
+    const hasDiscount = promoCode && promoDiscount > 0;
 
     const dateStr = selectedDate
         ? selectedDate.toLocaleDateString('ru', { day: 'numeric', month: 'short' })
@@ -99,10 +104,19 @@ export default function SuccessPage() {
                                 </p>
                                 <p className="text-text-muted text-sm">{selectedBarber.name}</p>
                             </div>
-                            <p className="text-white font-semibold">{total} ₽</p>
+                            <div className="text-right">
+                                {hasDiscount ? (
+                                    <>
+                                        <p className="text-white font-semibold">{finalPrice} ₽</p>
+                                        <p className="text-text-muted text-xs line-through">{originalPrice} ₽</p>
+                                    </>
+                                ) : (
+                                    <p className="text-white font-semibold">{finalPrice} ₽</p>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="flex pt-4 gap-4">
+                        <div className="flex pt-4 gap-4 flex-wrap">
                             <div className="flex items-center gap-2">
                                 <Calendar className="w-4 h-4 text-text-secondary" />
                                 <span className="text-white text-sm">{dateStr}</span>
@@ -111,6 +125,12 @@ export default function SuccessPage() {
                                 <Clock className="w-4 h-4 text-text-secondary" />
                                 <span className="text-white text-sm">{selectedTime}</span>
                             </div>
+                            {hasDiscount && (
+                                <div className="flex items-center gap-2">
+                                    <Tag className="w-4 h-4 text-success" />
+                                    <span className="text-success text-sm">{promoCode}</span>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 )}

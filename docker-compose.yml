@@ -24,6 +24,8 @@ services:
       - REMINDER_ENABLED=${REMINDER_ENABLED:-true}
       - REMINDER_MINUTES=${REMINDER_MINUTES:-60}
       - REMINDER_POLL_SECONDS=${REMINDER_POLL_SECONDS:-60}
+      - APP_TIMEZONE=${APP_TIMEZONE:-Europe/Moscow}
+      - TZ=${APP_TIMEZONE:-Europe/Moscow}
     volumes:
       - ./data:/app/data
     restart: unless-stopped
