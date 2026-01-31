@@ -7,10 +7,10 @@ import BookButton from "@/components/home/BookButton";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-bg pb-44">
+    <main className="min-h-screen-dynamic bg-bg pb-48">
       <Hero />
 
-      <div className="px-4 -mt-6 relative z-10 space-y-6">
+      <div className="px-4 -mt-6 relative z-10 space-y-6 stagger">
         <QuickActions />
         <Specialists />
         <Services />

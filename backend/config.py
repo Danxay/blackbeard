@@ -22,3 +22,8 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 # Seed data (disable for production)
 SEED_DATA = os.getenv("SEED_DATA", "true").lower() in {"1", "true", "yes"}
+
+# Reminders (1 hour before by default)
+REMINDER_ENABLED = os.getenv("REMINDER_ENABLED", "true").lower() in {"1", "true", "yes"}
+REMINDER_MINUTES = int(os.getenv("REMINDER_MINUTES", "60"))
+REMINDER_POLL_SECONDS = int(os.getenv("REMINDER_POLL_SECONDS", "60"))

@@ -107,7 +107,7 @@ def seed_database():
                 "rating": 4.9,
                 "reviews_count": 347,
                 "experience": "9 лет",
-                "image": "https://images.unsplash.com/photo-1618077360395-f3068be8e001?w=400&q=80",
+                "image": "/barbers/barber-1.png",
                 "is_available": True
             },
             {
@@ -116,7 +116,7 @@ def seed_database():
                 "rating": 4.8,
                 "reviews_count": 264,
                 "experience": "7 лет",
-                "image": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=80",
+                "image": "/barbers/barber-2.png",
                 "is_available": True
             },
             {
@@ -125,7 +125,7 @@ def seed_database():
                 "rating": 4.7,
                 "reviews_count": 189,
                 "experience": "5 лет",
-                "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80",
+                "image": "/barbers/barber-3.png",
                 "is_available": True
             },
             {
@@ -134,7 +134,7 @@ def seed_database():
                 "rating": 4.6,
                 "reviews_count": 124,
                 "experience": "4 года",
-                "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
+                "image": "/barbers/barber-4.png",
                 "is_available": True
             },
             {
@@ -143,7 +143,7 @@ def seed_database():
                 "rating": 4.5,
                 "reviews_count": 67,
                 "experience": "2 года",
-                "image": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80",
+                "image": "/barbers/barber-5.png",
                 "is_available": False
             }
         ]

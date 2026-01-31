@@ -59,7 +59,7 @@ export default function ServicesPage() {
 
     if (isLoading) {
         return (
-            <main className="min-h-screen bg-bg">
+            <main className="min-h-screen-dynamic bg-bg">
                 <Header title="Услуги" />
                 <div className="flex items-center justify-center h-[60vh]">
                     <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
@@ -69,18 +69,18 @@ export default function ServicesPage() {
     }
 
     return (
-        <main className="min-h-screen bg-bg">
+        <main className="min-h-screen-dynamic bg-bg">
             <Header title="Услуги" />
 
             {/* Filters */}
-            <div className="sticky top-14 z-30 bg-bg/95 backdrop-blur-sm border-b border-border">
+            <div className="sticky top-14 z-30 glass border-b border-border">
                 <div className="flex gap-2 p-4 overflow-x-auto no-scrollbar">
                     {filters.map(f => (
                         <button
                             key={f.key}
                             onClick={() => setActiveFilter(f.key)}
                             className={clsx(
-                                "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
+                                "px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all touch-feedback",
                                 activeFilter === f.key
                                     ? "bg-white text-black"
                                     : "bg-bg-card text-text-secondary border border-border"
@@ -93,7 +93,7 @@ export default function ServicesPage() {
             </div>
 
             {/* Services */}
-            <div className="p-4 pb-40 space-y-2">
+            <div className="p-4 pb-44 space-y-2 stagger">
                 {filteredServices.map(service => {
                     const isSelected = isServiceSelected(service.id);
                     const Icon = getIconComponent(service.icon);
@@ -106,7 +106,7 @@ export default function ServicesPage() {
                             aria-checked={isSelected}
                             onClick={() => toggleService(service)}
                             className={clsx(
-                                "flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all active:scale-[0.99] w-full text-left focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none",
+                                "flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all w-full text-left focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none touch-feedback",
                                 isSelected
                                     ? "bg-white/5 border-white/30"
                                     : "bg-bg-card border-border"
@@ -114,11 +114,11 @@ export default function ServicesPage() {
                         >
                             {/* Icon */}
                             <div className={clsx(
-                                "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors",
+                                "w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors",
                                 isSelected ? "bg-white/10" : "bg-bg-elevated"
                             )}>
                                 <Icon className={clsx(
-                                    "w-5 h-5 transition-colors",
+                                    "w-6 h-6 transition-colors",
                                     isSelected ? "text-white" : "text-text-secondary"
                                 )} />
                             </div>
@@ -126,9 +126,9 @@ export default function ServicesPage() {
                             {/* Content */}
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <h3 className="text-white font-medium">{service.name}</h3>
+                                    <h3 className="text-white font-medium text-base">{service.name}</h3>
                                     {service.popular && (
-                                        <span className="text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded">
+                                        <span className="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded-full font-medium">
                                             Хит
                                         </span>
                                     )}
@@ -136,16 +136,16 @@ export default function ServicesPage() {
                                 <p className="text-text-muted text-sm mt-0.5 line-clamp-1">{service.description}</p>
                                 <div className="flex items-center gap-3 mt-2">
                                     <span className="text-text-muted text-xs flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
+                                        <Clock className="w-3.5 h-3.5" />
                                         {service.duration} мин
                                     </span>
-                                    <span className="text-white font-semibold text-sm">{service.price} ₽</span>
+                                    <span className="text-white font-semibold">{service.price} ₽</span>
                                 </div>
                             </div>
 
                             {/* Checkbox */}
                             <div className={clsx(
-                                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0",
+                                "w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0",
                                 isSelected ? "bg-white border-white" : "border-text-muted"
                             )}>
                                 {isSelected && <Check className="w-4 h-4 text-black" strokeWidth={3} />}
@@ -156,7 +156,7 @@ export default function ServicesPage() {
             </div>
 
             {/* Footer */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 glass border-t border-border">
+            <div className="fixed-bottom-panel p-4 glass border-t border-border">
                 <div className="flex items-center justify-between mb-3 px-1">
                     <div>
                         <p className="text-text-muted text-xs">
@@ -173,7 +173,7 @@ export default function ServicesPage() {
                         )}
                     </div>
                     {total > 0 && (
-                        <p className="text-white text-2xl font-semibold">{total} ₽</p>
+                        <p className="text-white text-2xl font-bold">{total} ₽</p>
                     )}
                 </div>
                 <Link
@@ -181,7 +181,7 @@ export default function ServicesPage() {
                     className={clsx(
                         "flex items-center justify-between w-full py-4 px-6 rounded-2xl font-semibold transition-all",
                         selectedServices.length > 0
-                            ? "bg-white text-black active:scale-[0.98]"
+                            ? "bg-white text-black btn-press"
                             : "bg-bg-card text-text-muted cursor-not-allowed"
                     )}
                     onClick={(e) => selectedServices.length === 0 && e.preventDefault()}

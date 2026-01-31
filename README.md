@@ -91,6 +91,11 @@ DATABASE_URL=sqlite:///./data/blackbeard.db
 
 # Seed demo data (отключить на проде)
 SEED_DATA=true
+
+# Напоминания о записи (за N минут)
+REMINDER_ENABLED=true
+REMINDER_MINUTES=60
+REMINDER_POLL_SECONDS=60
 ```
 
 ## 🤖 Настройка Telegram Bot

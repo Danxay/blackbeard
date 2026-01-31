@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import asyncio
 from database import engine, Base
 from config import FRONTEND_URL, API_HOST, API_PORT, SEED_DATA
 from routers import services_router, barbers_router, bookings_router, auth_router
 # Import models to register them with Base.metadata
 import models  # noqa: F401
 from seed import seed_database
+from reminders import reminder_worker
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -14,9 +16,12 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     if SEED_DATA:
         seed_database()
+    stop_event = asyncio.Event()
+    reminder_task = asyncio.create_task(reminder_worker(stop_event))
     yield
     # Shutdown
-    pass
+    stop_event.set()
+    await reminder_task
 
 app = FastAPI(
     title="Black Beard API",

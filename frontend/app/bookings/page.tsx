@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useBookings } from "@/hooks/useBookings";
 import { useBookingStore } from "@/store/bookingStore";
 import { useRouter } from "next/navigation";
+import type { Booking } from "@/lib/api";
 
 export default function BookingsPage() {
     const { bookings, isLoading, isError, cancelBooking } = useBookings();
@@ -18,12 +19,20 @@ export default function BookingsPage() {
     const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
     const [isCancelling, setIsCancelling] = useState(false);
 
-    const getBookingDateTime = (dateStr: string, timeStr: string) => {
+    const toDateString = (value: unknown) => {
+        if (value instanceof Date) return value.toISOString();
+        if (typeof value === 'string') return value;
+        return '';
+    };
+
+    const getBookingDateTime = (dateValue: unknown, timeValue: unknown) => {
+        const dateStr = toDateString(dateValue);
+        const timeStr = typeof timeValue === 'string' ? timeValue : '';
         const datePart = dateStr.split('T')[0];
         const [year, month, day] = datePart.split('-').map((val) => parseInt(val, 10));
         const date = Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)
             ? new Date(year, month - 1, day)
-            : new Date(dateStr);
+            : new Date(dateStr || Date.now());
         if (timeStr) {
             const [h, m] = timeStr.split(':').map((val) => parseInt(val, 10));
             if (!Number.isNaN(h) && !Number.isNaN(m)) {
@@ -36,46 +45,60 @@ export default function BookingsPage() {
         return date;
     };
 
-    const getBookingDateOnly = (dateStr: string) => {
+    const getBookingDateOnly = (dateValue: unknown) => {
+        const dateStr = toDateString(dateValue);
         const datePart = dateStr.split('T')[0];
         const [year, month, day] = datePart.split('-').map((val) => parseInt(val, 10));
         if (Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day)) {
             return new Date(year, month - 1, day);
         }
-        return new Date(dateStr);
+        return new Date(dateStr || Date.now());
     };
 
-    const handleReschedule = (booking: typeof bookings[number]) => {
+    const handleReschedule = (booking: Booking) => {
+        const services = Array.isArray(booking.services) ? booking.services : [];
+        const barber = booking.barber ?? null;
         reset();
-        if (booking.services?.length) {
-            setServices(booking.services);
+        setServices(services);
+        if (barber) setBarber(barber);
+        if (booking.date) setDate(getBookingDateOnly(booking.date));
+        if (typeof booking.time === 'string' && booking.time) setTime(booking.time);
+
+        if (!services.length) {
+            setEntryPoint('services');
+            router.push('/services');
+            return;
         }
-        if (booking.barber) {
-            setBarber(booking.barber);
+        if (!barber) {
+            setEntryPoint('barber');
+            router.push('/book/barber');
+            return;
         }
-        if (booking.date) {
-            setDate(getBookingDateOnly(booking.date));
-        }
-        if (booking.time) {
-            setTime(booking.time);
-        }
+
         setEntryPoint('barber');
         router.push('/book/date');
     };
 
-    const handleRepeat = (booking: typeof bookings[number]) => {
+    const handleRepeat = (booking: Booking) => {
+        const services = Array.isArray(booking.services) ? booking.services : [];
+        const barber = booking.barber ?? null;
         reset();
-        if (booking.services?.length) {
-            setServices(booking.services);
-        }
-        if (booking.barber) {
-            setBarber(booking.barber);
-            setEntryPoint('barber');
-            router.push('/book/date');
-        } else {
+        setServices(services);
+        if (barber) setBarber(barber);
+
+        if (!services.length) {
             setEntryPoint('services');
-            router.push('/book/barber');
+            router.push('/services');
+            return;
         }
+        if (!barber) {
+            setEntryPoint('barber');
+            router.push('/book/barber');
+            return;
+        }
+
+        setEntryPoint('barber');
+        router.push('/book/date');
     };
 
     // Разделяем на предстоящие и историю
@@ -105,8 +128,8 @@ export default function BookingsPage() {
         }
     };
 
-    const formatDate = (dateStr: string) => {
-        const date = getBookingDateOnly(dateStr);
+    const formatDate = (dateValue: unknown) => {
+        const date = getBookingDateOnly(dateValue);
         return {
             weekday: date.toLocaleDateString('ru-RU', { weekday: 'long' }),
             dayMonth: date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }),

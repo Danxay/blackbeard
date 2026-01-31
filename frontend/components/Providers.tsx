@@ -2,6 +2,7 @@
 
 import { SWRConfig } from 'swr';
 import { ReactNode } from 'react';
+import TelegramInit from '@/components/TelegramInit';
 
 interface ProvidersProps {
     children: ReactNode;
@@ -19,6 +20,7 @@ export default function Providers({ children }: ProvidersProps) {
                 shouldRetryOnError: false,
             }}
         >
+            <TelegramInit />
             {children}
         </SWRConfig>
     );

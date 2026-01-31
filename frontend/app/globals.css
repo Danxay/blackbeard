@@ -33,14 +33,21 @@
 
 :root {
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  /* Динамическая высота экрана для мобильных */
+  --app-height: 100dvh;
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
 }
 
 html {
   background: var(--color-bg);
+  /* Поддержка динамической высоты */
+  height: 100dvh;
+  height: -webkit-fill-available;
 }
 
 body {
@@ -50,6 +57,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.01em;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  /* Предотвращаем overscroll на iOS */
+  overscroll-behavior: none;
 }
 
 /* Скрытие скроллбаров */
@@ -62,7 +73,7 @@ body {
   display: none;
 }
 
-/* Глобальное скрытие скроллбаров */
+/* Глобальное скрытие скроллбаров на мобильных */
 @media (pointer: coarse) {
   * {
     scrollbar-width: none;
@@ -79,7 +90,6 @@ body {
     opacity: 0;
     transform: translateY(8px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -91,10 +101,20 @@ body {
     opacity: 0;
     transform: translateY(16px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -102,19 +122,52 @@ body {
   0% {
     background-position: -200% 0;
   }
-
   100% {
     background-position: 200% 0;
   }
 }
 
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out;
+  animation: fade-in 0.3s ease-out forwards;
 }
 
 .animate-slide-up {
-  animation: slide-up 0.4s ease-out;
+  animation: slide-up 0.4s ease-out forwards;
 }
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out forwards;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* Staggered animations - используй с nth-child */
+.stagger > * {
+  opacity: 0;
+  animation: fade-in 0.4s ease-out forwards;
+}
+
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 50ms; }
+.stagger > *:nth-child(3) { animation-delay: 100ms; }
+.stagger > *:nth-child(4) { animation-delay: 150ms; }
+.stagger > *:nth-child(5) { animation-delay: 200ms; }
+.stagger > *:nth-child(6) { animation-delay: 250ms; }
+.stagger > *:nth-child(7) { animation-delay: 300ms; }
+.stagger > *:nth-child(8) { animation-delay: 350ms; }
+.stagger > *:nth-child(9) { animation-delay: 400ms; }
+.stagger > *:nth-child(10) { animation-delay: 450ms; }
 
 /* Skeleton loading */
 .skeleton {
@@ -123,20 +176,70 @@ body {
   animation: shimmer 1.5s infinite;
 }
 
+/* Touch feedback улучшенный */
+.touch-feedback {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.touch-feedback:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* Button press effect */
+.btn-press {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-press:active {
+  transform: scale(0.98) translateY(1px);
+}
+
 @layer utilities {
+  /* Safe area padding */
   .safe-bottom {
-    padding-bottom: max(20px, var(--safe-area-inset-bottom));
+    padding-bottom: max(24px, calc(var(--safe-area-inset-bottom) + 8px));
+  }
+
+  .safe-top {
+    padding-top: max(16px, var(--safe-area-inset-top));
   }
 
   /* Glass effect */
   .glass {
-    background: rgba(26, 26, 26, 0.8);
+    background: rgba(26, 26, 26, 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-light {
+    background: rgba(26, 26, 26, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   /* Subtle glow */
   .glow {
     box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+  }
+
+  /* Dynamic viewport height */
+  .h-screen-dynamic {
+    height: 100dvh;
+    height: -webkit-fill-available;
+  }
+
+  .min-h-screen-dynamic {
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+
+  /* Bottom fixed panel */
+  .fixed-bottom-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding-bottom: max(24px, calc(var(--safe-area-inset-bottom) + 8px));
   }
 }

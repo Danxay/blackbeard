@@ -24,13 +24,28 @@ function generateDays() {
             date: date.getDate(),
             month: date.toLocaleDateString('ru', { month: 'short' }),
             fullDate: date,
-            disabled: isWeekend
+            disabled: isWeekend,
+            isToday: i === 0
         });
     }
     return days;
 }
 
-const timeSlots = ["10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+const allTimeSlots = ["10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+
+// Проверяем, прошло ли время для выбранной даты
+function isTimeSlotPast(timeSlot: string, isToday: boolean): boolean {
+    if (!isToday) return false;
+
+    const now = new Date();
+    const [hours, minutes] = timeSlot.split(':').map(Number);
+    const slotTime = new Date();
+    slotTime.setHours(hours, minutes, 0, 0);
+
+    // Добавляем буфер в 30 минут (нельзя записаться за 30 минут до времени)
+    const bufferMs = 30 * 60 * 1000;
+    return now.getTime() + bufferMs > slotTime.getTime();
+}
 
 export default function DatePage() {
     const router = useRouter();
@@ -41,6 +56,7 @@ export default function DatePage() {
         selectedTime,
         setDate,
         setTime,
+        hasHydrated,
         getTotalPrice,
         getTotalDuration
     } = useBookingStore();
@@ -53,6 +69,24 @@ export default function DatePage() {
     }, [days]);
 
     const [selectedDayIndex, setSelectedDayIndex] = useState(firstAvailableIndex >= 0 ? firstAvailableIndex : 0);
+
+    // Определяем, сегодня ли выбранный день
+    const isSelectedDayToday = days[selectedDayIndex]?.isToday ?? false;
+
+    // Фильтруем доступные слоты для выбранного дня
+    const availableTimeSlots = useMemo(() => {
+        return allTimeSlots.map(slot => ({
+            time: slot,
+            disabled: isTimeSlotPast(slot, isSelectedDayToday)
+        }));
+    }, [isSelectedDayToday]);
+
+    // Сбрасываем выбранное время, если оно стало недоступно
+    useEffect(() => {
+        if (selectedTime && isTimeSlotPast(selectedTime, isSelectedDayToday)) {
+            setTime(null as unknown as string);
+        }
+    }, [selectedDayIndex, isSelectedDayToday, selectedTime, setTime]);
 
     useEffect(() => {
         if (!selectedDate) return;
@@ -81,19 +115,23 @@ export default function DatePage() {
 
     // Редирект если нет данных
     useEffect(() => {
+        if (!hasHydrated) return;
         if (!selectedBarber || selectedServices.length === 0) {
             router.push('/services');
         }
-    }, [selectedBarber, selectedServices, router]);
+    }, [hasHydrated, selectedBarber, selectedServices, router]);
 
     const handleDaySelect = useCallback((index: number) => {
         if (!days[index].disabled) {
             setSelectedDayIndex(index);
             setDate(days[index].fullDate);
+            // Сбрасываем время при смене дня
+            setTime(null as unknown as string);
         }
-    }, [days, setDate]);
+    }, [days, setDate, setTime]);
 
-    const handleTimeSelect = useCallback((time: string) => {
+    const handleTimeSelect = useCallback((time: string, disabled: boolean) => {
+        if (disabled) return;
         setTime(time);
         // Убеждаемся что дата установлена
         if (!days[selectedDayIndex].disabled) {
@@ -103,8 +141,11 @@ export default function DatePage() {
 
     const canProceed = selectedTime !== null;
 
+    // Проверяем, есть ли вообще доступные слоты на сегодня
+    const hasAvailableSlots = availableTimeSlots.some(slot => !slot.disabled);
+
     return (
-        <main className="min-h-screen bg-bg">
+        <main className="min-h-screen-dynamic bg-bg">
             <Header title="Дата и время" />
 
             <div className="p-4 pb-48 space-y-6">
@@ -159,7 +200,7 @@ export default function DatePage() {
                                 onClick={() => handleDaySelect(i)}
                                 disabled={d.disabled}
                                 className={clsx(
-                                    "flex flex-col items-center justify-center w-16 h-20 rounded-xl flex-shrink-0 transition-all",
+                                    "flex flex-col items-center justify-center w-16 h-20 rounded-xl flex-shrink-0 transition-all touch-feedback",
                                     d.disabled && "opacity-40 cursor-not-allowed",
                                     selectedDayIndex === i
                                         ? "bg-white text-black"
@@ -186,17 +227,26 @@ export default function DatePage() {
 
                 {/* Time slots */}
                 <div>
-                    <p className="text-text-secondary text-sm mb-3">Выберите время</p>
+                    <div className="flex items-center justify-between mb-3">
+                        <p className="text-text-secondary text-sm">Выберите время</p>
+                        {isSelectedDayToday && !hasAvailableSlots && (
+                            <p className="text-warning text-xs">Доступных слотов нет</p>
+                        )}
+                    </div>
                     <div className="grid grid-cols-4 gap-2">
-                        {timeSlots.map(time => (
+                        {availableTimeSlots.map(({ time, disabled }) => (
                             <button
                                 key={time}
-                                onClick={() => handleTimeSelect(time)}
+                                onClick={() => handleTimeSelect(time, disabled)}
+                                disabled={disabled}
                                 className={clsx(
                                     "py-3 rounded-xl text-sm font-medium transition-all",
+                                    disabled && "opacity-40 cursor-not-allowed",
                                     selectedTime === time
                                         ? "bg-white text-black"
-                                        : "bg-bg-card border border-border text-white"
+                                        : disabled
+                                            ? "bg-bg-card border border-border text-text-muted"
+                                            : "bg-bg-card border border-border text-white touch-feedback"
                                 )}
                             >
                                 {time}
@@ -207,7 +257,7 @@ export default function DatePage() {
             </div>
 
             {/* Footer */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 pb-8 glass border-t border-border">
+            <div className="fixed-bottom-panel p-4 glass border-t border-border">
                 <div className="flex items-center justify-between mb-3 px-1">
                     <div>
                         <p className="text-white text-sm">
@@ -225,7 +275,7 @@ export default function DatePage() {
                     className={clsx(
                         "flex items-center justify-between w-full py-4 px-6 rounded-2xl font-semibold transition-all",
                         canProceed
-                            ? "bg-white text-black active:scale-[0.98]"
+                            ? "bg-white text-black btn-press"
                             : "bg-bg-card text-text-muted cursor-not-allowed"
                     )}
                     onClick={(e) => !canProceed && e.preventDefault()}

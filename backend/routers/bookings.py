@@ -82,7 +82,8 @@ async def create_booking(
         time=booking_data.time,
         total_price=booking_data.total_price,
         total_duration=booking_data.total_duration,
-        status=BookingStatus.CONFIRMED
+        status=BookingStatus.CONFIRMED,
+        reminder_sent=False,
     )
     booking.services = services
     

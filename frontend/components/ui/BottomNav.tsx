@@ -15,8 +15,8 @@ export default function BottomNav() {
     const pathname = usePathname()
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border safe-bottom">
-            <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border">
+            <div className="flex items-stretch justify-around max-w-lg mx-auto safe-bottom">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href
                     return (
@@ -25,26 +25,32 @@ export default function BottomNav() {
                             href={item.href}
                             aria-current={isActive ? 'page' : undefined}
                             className={clsx(
-                                "flex flex-col items-center justify-center w-20 h-full transition-all",
-                                isActive ? "text-white" : "text-text-muted hover:text-text-secondary"
+                                "relative flex flex-col items-center justify-center flex-1 py-3 min-h-[56px] transition-all duration-200 touch-feedback",
+                                isActive ? "text-white" : "text-text-muted"
                             )}
                         >
-                            <item.icon
-                                className={clsx(
-                                    "w-5 h-5 mb-1 transition-transform",
-                                    isActive && "scale-110"
-                                )}
-                                strokeWidth={isActive ? 2.5 : 2}
-                            />
+                            {/* Индикатор активности */}
+                            <div className={clsx(
+                                "absolute top-0 left-1/2 -translate-x-1/2 h-0.5 bg-white rounded-full transition-all duration-300",
+                                isActive ? "w-8 opacity-100" : "w-0 opacity-0"
+                            )} />
+
+                            <div className={clsx(
+                                "relative transition-transform duration-200",
+                                isActive && "scale-105"
+                            )}>
+                                <item.icon
+                                    className="w-6 h-6"
+                                    strokeWidth={isActive ? 2.5 : 1.8}
+                                />
+                            </div>
+
                             <span className={clsx(
-                                "text-[10px] font-medium tracking-wide",
-                                isActive && "font-semibold"
+                                "text-[11px] mt-1 transition-all duration-200",
+                                isActive ? "font-semibold" : "font-medium opacity-80"
                             )}>
                                 {item.label}
                             </span>
-                            {isActive && (
-                                <div className="absolute top-0 w-12 h-0.5 bg-white rounded-full" />
-                            )}
                         </Link>
                     )
                 })}

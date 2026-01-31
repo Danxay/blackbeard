@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Service, Barber, api } from '@/lib/api';
 
+// Промокоды
+const PROMO_CODES: Record<string, { discount: number; type: 'percent' | 'fixed'; description: string }> = {
+    'FIRST20': { discount: 20, type: 'percent', description: 'Скидка 20% на первый визит' },
+    'COMBO15': { discount: 15, type: 'percent', description: 'Скидка 15% на комплекс' },
+    'FRIEND': { discount: 500, type: 'fixed', description: 'Скидка 500₽ за друга' },
+};
+
 interface BookingState {
     // Выбранные данные
     selectedServices: Service[];
@@ -9,11 +16,18 @@ interface BookingState {
     selectedDate: Date | null;
     selectedTime: string | null;
 
+    // Промокод
+    promoCode: string | null;
+    promoDiscount: number;
+    promoDescription: string | null;
+    promoError: string | null;
+
     // Откуда начали флоу
     entryPoint: 'services' | 'barber' | 'home' | null;
 
     // Loading state
     isSubmitting: boolean;
+    hasHydrated: boolean;
 
     // Actions
     setServices: (services: Service[]) => void;
@@ -26,8 +40,13 @@ interface BookingState {
     setTime: (time: string) => void;
     setEntryPoint: (point: 'services' | 'barber' | 'home') => void;
 
+    // Promo
+    applyPromoCode: (code: string) => boolean;
+    clearPromoCode: () => void;
+
     // Computed
     getTotalPrice: () => number;
+    getFinalPrice: () => number;
     getTotalDuration: () => number;
 
     // API
@@ -36,6 +55,7 @@ interface BookingState {
     // Utils
     reset: () => void;
     isServiceSelected: (serviceId: number) => boolean;
+    setHasHydrated: (value: boolean) => void;
 }
 
 const initialState = {
@@ -43,8 +63,13 @@ const initialState = {
     selectedBarber: null as Barber | null,
     selectedDate: null as Date | null,
     selectedTime: null as string | null,
+    promoCode: null as string | null,
+    promoDiscount: 0,
+    promoDescription: null as string | null,
+    promoError: null as string | null,
     entryPoint: null as BookingState['entryPoint'],
     isSubmitting: false,
+    hasHydrated: false,
 };
 
 // Get Telegram user data
@@ -94,9 +119,49 @@ export const useBookingStore = create<BookingState>()(
             setDate: (date) => set({ selectedDate: date }),
             setTime: (time) => set({ selectedTime: time }),
             setEntryPoint: (point) => set({ entryPoint: point }),
+            setHasHydrated: (value) => set({ hasHydrated: value }),
+
+            applyPromoCode: (code: string) => {
+                const normalizedCode = code.trim().toUpperCase();
+                const promo = PROMO_CODES[normalizedCode];
+
+                if (!promo) {
+                    set({ promoError: 'Промокод не найден', promoCode: null, promoDiscount: 0, promoDescription: null });
+                    return false;
+                }
+
+                const totalPrice = get().getTotalPrice();
+                let discount = 0;
+
+                if (promo.type === 'percent') {
+                    discount = Math.round(totalPrice * promo.discount / 100);
+                } else {
+                    discount = Math.min(promo.discount, totalPrice);
+                }
+
+                set({
+                    promoCode: normalizedCode,
+                    promoDiscount: discount,
+                    promoDescription: promo.description,
+                    promoError: null,
+                });
+                return true;
+            },
+
+            clearPromoCode: () => set({
+                promoCode: null,
+                promoDiscount: 0,
+                promoDescription: null,
+                promoError: null,
+            }),
 
             getTotalPrice: () => {
                 return get().selectedServices.reduce((sum, s) => sum + s.price, 0);
+            },
+
+            getFinalPrice: () => {
+                const total = get().getTotalPrice();
+                return Math.max(0, total - get().promoDiscount);
             },
 
             getTotalDuration: () => {
@@ -123,7 +188,7 @@ export const useBookingStore = create<BookingState>()(
                         service_ids: state.selectedServices.map(s => s.id),
                         date: formatLocalDate(state.selectedDate),
                         time: state.selectedTime,
-                        total_price: state.getTotalPrice(),
+                        total_price: state.getFinalPrice(),
                         total_duration: state.getTotalDuration(),
                     });
 
@@ -136,7 +201,10 @@ export const useBookingStore = create<BookingState>()(
                 }
             },
 
-            reset: () => set(initialState),
+            reset: () => set((state) => ({
+                ...initialState,
+                hasHydrated: state.hasHydrated,
+            })),
 
             isServiceSelected: (serviceId) => {
                 return get().selectedServices.some(s => s.id === serviceId);
@@ -148,6 +216,9 @@ export const useBookingStore = create<BookingState>()(
                 selectedServices: state.selectedServices,
                 selectedBarber: state.selectedBarber,
             }),
+            onRehydrateStorage: () => (state) => {
+                state?.setHasHydrated(true);
+            },
         }
     )
 );

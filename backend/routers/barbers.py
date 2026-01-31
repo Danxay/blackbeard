@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/barbers", tags=["barbers"])
 @router.get("", response_model=List[BarberResponse])
 def get_barbers(db: Session = Depends(get_db)):
     """Get all barbers"""
-    return db.query(Barber).filter(Barber.is_available == True).all()
+    return db.query(Barber).all()
 
 @router.get("/{barber_id}", response_model=BarberResponse)
 def get_barber(barber_id: int, db: Session = Depends(get_db)):
