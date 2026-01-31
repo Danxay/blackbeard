@@ -16,7 +16,17 @@ SHOP_INFO = """
 Сб: 10:00 — 21:00
 Вс: 11:00 — 20:00
 
-📞 <a href="tel:+78123092850">+7 (812) 309-28-50</a>
+📞 +7 (812) 309-28-50
+"""
+
+CALL_INFO = """
+📞 <b>Позвоните нам:</b>
+
+<code>+7 (812) 309-28-50</code>
+
+👆 Нажмите на номер, чтобы скопировать
+
+🕐 Принимаем звонки ежедневно с 10:00 до 22:00
 """
 
 @router.callback_query(lambda c: c.data == "location")
@@ -27,11 +37,8 @@ async def show_location(callback: CallbackQuery):
 
 @router.callback_query(lambda c: c.data == "call")
 async def show_phone(callback: CallbackQuery):
-    """Show phone number"""
-    await callback.message.answer(
-        "📞 <b>Позвонить:</b>\n\n<a href=\"tel:+78123092850\">+7 (812) 309-28-50</a>",
-        parse_mode="HTML"
-    )
+    """Show phone number with tap-to-copy"""
+    await callback.message.answer(CALL_INFO, parse_mode="HTML")
     await callback.answer()
 
 @router.callback_query(lambda c: c.data.startswith("cancel_"))
@@ -66,7 +73,6 @@ async def send_booking_confirmation(bot: Bot, chat_id: int, booking_data: dict):
 💰 {booking_data['total_price']} ₽
 
 📍 Невский просп., 28 (м. Гостиный двор)
-📞 <a href="tel:+78123092850">+7 (812) 309-28-50</a>
 
 Ждём вас в Black Beard!
 """
@@ -84,7 +90,6 @@ async def send_reminder(bot: Bot, chat_id: int, booking_data: dict):
 👤 Мастер: {booking_data['barber']}
 
 📍 Невский просп., 28 (м. Гостиный двор)
-📞 <a href="tel:+78123092850">+7 (812) 309-28-50</a>
 
 До встречи! 👋
 """

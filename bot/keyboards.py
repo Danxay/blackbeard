@@ -1,9 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from config import WEBAPP_URL
 
-# Phone number for direct calls
-PHONE_NUMBER = "+78123092850"
-
 def get_main_keyboard() -> InlineKeyboardMarkup:
     """Main keyboard with WebApp button"""
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -18,7 +15,7 @@ def get_main_keyboard() -> InlineKeyboardMarkup:
             ),
             InlineKeyboardButton(
                 text="📞 Позвонить",
-                url=f"tel:{PHONE_NUMBER}"
+                callback_data="call"
             )
         ]
     ])
